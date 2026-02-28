@@ -9,24 +9,32 @@ class ApiClient {
     };
   }
 
-  async request(method, url, data = null) {
+  async request(method, url, data = null, options = {}) {
+    const isFormData = data instanceof FormData;
+
     const config = {
       method,
       headers: {
-        'Content-Type': 'application/json',
         ...this.defaults.headers.common
       }
     };
 
+    // Don't set Content-Type for FormData - browser will set it with boundary
+    if (!isFormData) {
+      config.headers['Content-Type'] = 'application/json';
+    }
+
     if (data) {
-      config.body = JSON.stringify(data);
+      config.body = isFormData ? data : JSON.stringify(data);
     }
 
     const response = await fetch(`${BASE_URL}${url}`, config);
     const responseData = await response.json();
 
     if (!response.ok) {
-      throw new Error(responseData.error || 'Request failed');
+      const error = new Error(responseData.error || 'Request failed');
+      error.response = { data: responseData };
+      throw error;
     }
 
     return { data: responseData };
@@ -36,8 +44,8 @@ class ApiClient {
     return this.request('GET', url);
   }
 
-  post(url, data) {
-    return this.request('POST', url, data);
+  post(url, data, options) {
+    return this.request('POST', url, data, options);
   }
 
   put(url, data) {
