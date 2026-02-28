@@ -236,6 +236,10 @@ router.delete('/:id/rules/:ruleId', authenticateToken, (req, res) => {
 // ============================================
 
 router.post('/evaluate', authenticateToken, upload.single('image'), async (req, res) => {
+  console.log('=== EVALUATE ENDPOINT HIT ===');
+  console.log('API Key exists:', !!process.env.ANTHROPIC_API_KEY);
+  console.log('API Key prefix:', process.env.ANTHROPIC_API_KEY?.substring(0, 15) + '...');
+
   try {
     const { strategyId } = req.body;
     const db = getDb();
