@@ -12,6 +12,7 @@ import { Analysis } from './pages/Analysis';
 import { Analytics } from './pages/Analytics';
 import { AdvancedAnalytics } from './pages/AdvancedAnalytics';
 import { TradeHistory } from './pages/TradeHistory';
+import { Sentiment } from './pages/Sentiment';
 import { Learning } from './pages/Learning';
 import { Plans } from './pages/Plans';
 import { Settings } from './pages/Settings';
@@ -46,6 +47,7 @@ function App() {
               <Route path="/strategies" element={<Strategies />} />
               <Route path="/social" element={<Social />} />
               <Route path="/alerts" element={<Alerts />} />
+              <Route path="/sentiment" element={<Sentiment />} />
             </Route>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

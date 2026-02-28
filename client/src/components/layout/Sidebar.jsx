@@ -5,7 +5,6 @@ import {
   Zap,
   GraduationCap,
   BookOpen,
-  History,
   CreditCard,
   Settings,
   LogOut,
@@ -41,7 +40,7 @@ const navGroups = [
     items: [
       { path: '/advanced-analytics', icon: LineChart, label: 'Advanced', badge: 'Pro', gradient: 'from-indigo-500 to-purple-500' },
       { path: '/journal', icon: BookOpen, label: 'Journal', gradient: 'from-pink-500 to-rose-500' },
-      { path: '/history', icon: History, label: 'Trade History', gradient: 'from-indigo-500 to-blue-500' },
+      { path: '/sentiment', icon: TrendingUp, label: 'Sentiment', badge: 'AI', gradient: 'from-cyan-500 to-blue-500' },
     ]
   },
   {
