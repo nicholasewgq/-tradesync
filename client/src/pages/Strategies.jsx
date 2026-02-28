@@ -24,9 +24,148 @@ import {
   Image,
   X,
   Check,
-  ListChecks
+  ListChecks,
+  Zap,
+  BookOpen,
+  Shield,
+  Layers,
+  ArrowRight,
+  Star,
+  Download
 } from 'lucide-react';
 import { api } from '../utils/api';
+
+// Pre-built trading strategies
+const PRESET_STRATEGIES = [
+  {
+    id: 'ict',
+    name: 'ICT (Inner Circle Trader)',
+    description: 'Smart money concepts focusing on institutional order flow, liquidity, and market structure.',
+    icon: '🏦',
+    color: 'from-blue-500 to-indigo-600',
+    difficulty: 'Advanced',
+    rules: [
+      { name: 'Order Block Entry', description: 'Enter at a valid bullish/bearish order block with displacement' },
+      { name: 'Fair Value Gap', description: 'Price should fill into a fair value gap (FVG) before entry' },
+      { name: 'Liquidity Sweep', description: 'Wait for liquidity grab (stop hunt) before entering' },
+      { name: 'Market Structure Shift', description: 'Confirm break of structure (BOS) or change of character (CHoCH)' },
+      { name: 'Kill Zone Entry', description: 'Trade during high-probability times (London/NY sessions)' },
+      { name: 'Premium/Discount Zone', description: 'Buy in discount zone, sell in premium zone (use Fib)' }
+    ]
+  },
+  {
+    id: 'smc',
+    name: 'SMC (Smart Money Concepts)',
+    description: 'Identify and trade with institutional money flow using structure and order flow analysis.',
+    icon: '💎',
+    color: 'from-purple-500 to-pink-600',
+    difficulty: 'Advanced',
+    rules: [
+      { name: 'Break of Structure', description: 'Confirm BOS with strong momentum candle' },
+      { name: 'Order Block Mitigation', description: 'Enter at unmitigated order block' },
+      { name: 'Imbalance Fill', description: 'Look for price to fill imbalances before continuation' },
+      { name: 'Equal Highs/Lows Sweep', description: 'Wait for liquidity sweep of equal levels' },
+      { name: 'Inducement Recognition', description: 'Identify and avoid inducement traps' },
+      { name: 'Risk to Reward 1:3+', description: 'Minimum 1:3 risk to reward ratio' }
+    ]
+  },
+  {
+    id: 'supply-demand',
+    name: 'Supply & Demand',
+    description: 'Trade based on institutional supply and demand zones where price is likely to react.',
+    icon: '⚖️',
+    color: 'from-emerald-500 to-teal-600',
+    difficulty: 'Intermediate',
+    rules: [
+      { name: 'Fresh Zone Entry', description: 'Only trade fresh (untested) supply/demand zones' },
+      { name: 'Strong Departure', description: 'Zone must have strong departure move (3+ candles)' },
+      { name: 'Base Formation', description: 'Look for consolidation base before the move' },
+      { name: 'Time at Level', description: 'Less time spent at zone = stronger zone' },
+      { name: 'Drop-Base-Rally/Rally-Base-Drop', description: 'Identify proper zone formation pattern' },
+      { name: 'Zone Confluence', description: 'Multiple timeframe zone alignment' }
+    ]
+  },
+  {
+    id: 'price-action',
+    name: 'Price Action Trading',
+    description: 'Pure price movement analysis using candlestick patterns and key levels.',
+    icon: '📊',
+    color: 'from-amber-500 to-orange-600',
+    difficulty: 'Intermediate',
+    rules: [
+      { name: 'Key Level Reaction', description: 'Trade reactions at support/resistance levels' },
+      { name: 'Candlestick Confirmation', description: 'Wait for reversal candle pattern (engulfing, pin bar, etc.)' },
+      { name: 'Trend Alignment', description: 'Trade in direction of higher timeframe trend' },
+      { name: 'Clean Price Structure', description: 'Clear higher highs/lows or lower highs/lows' },
+      { name: 'Volume Confirmation', description: 'Higher volume on breakout/reversal candles' },
+      { name: 'No Trading in Chop', description: 'Avoid ranging/consolidating markets' }
+    ]
+  },
+  {
+    id: 'breakout',
+    name: 'Breakout Trading',
+    description: 'Trade explosive moves when price breaks out of consolidation or key levels.',
+    icon: '🚀',
+    color: 'from-red-500 to-rose-600',
+    difficulty: 'Beginner',
+    rules: [
+      { name: 'Consolidation Period', description: 'Minimum 5+ candles of consolidation before breakout' },
+      { name: 'Volume Spike', description: 'Breakout candle must have above-average volume' },
+      { name: 'Clean Break', description: 'Full candle close beyond the level, not just a wick' },
+      { name: 'Retest Entry', description: 'Wait for retest of broken level when possible' },
+      { name: 'Momentum Confirmation', description: 'RSI/MACD confirming direction' },
+      { name: 'Stop Below Structure', description: 'Place stop below consolidation low/high' }
+    ]
+  },
+  {
+    id: 'trend-following',
+    name: 'Trend Following',
+    description: 'Ride the trend with pullback entries using moving averages and momentum.',
+    icon: '📈',
+    color: 'from-cyan-500 to-blue-600',
+    difficulty: 'Beginner',
+    rules: [
+      { name: 'Trend Confirmation', description: 'Price above/below 20 & 50 EMA for trend direction' },
+      { name: 'Pullback to MA', description: 'Enter on pullback to 20 EMA or 50 EMA' },
+      { name: 'Higher Timeframe Alignment', description: 'Daily/4H trend matches entry timeframe' },
+      { name: 'Momentum Filter', description: 'RSI between 40-60 on pullback (not overbought/oversold)' },
+      { name: 'Structure Intact', description: 'Trend structure (HH/HL or LH/LL) still intact' },
+      { name: 'Trail Stop with MA', description: 'Use moving average as trailing stop' }
+    ]
+  },
+  {
+    id: 'scalping',
+    name: 'Scalping Strategy',
+    description: 'Quick in-and-out trades capturing small moves with tight risk management.',
+    icon: '⚡',
+    color: 'from-yellow-500 to-amber-600',
+    difficulty: 'Advanced',
+    rules: [
+      { name: 'High Liquidity Sessions', description: 'Only trade during London/NY overlap' },
+      { name: 'Tight Spread', description: 'Spread must be less than 2 pips' },
+      { name: 'Quick Target', description: 'Target 5-15 pips, stop 5-10 pips' },
+      { name: 'No News Trading', description: 'Avoid trading 30 min before/after major news' },
+      { name: 'Order Flow Reading', description: 'Use DOM/tape reading for entry timing' },
+      { name: 'Max 3 Losses', description: 'Stop trading after 3 consecutive losses' }
+    ]
+  },
+  {
+    id: 'swing',
+    name: 'Swing Trading',
+    description: 'Capture multi-day moves by trading major swing points and trends.',
+    icon: '🌊',
+    color: 'from-indigo-500 to-violet-600',
+    difficulty: 'Intermediate',
+    rules: [
+      { name: 'Daily Chart Setup', description: 'Primary analysis on daily timeframe' },
+      { name: 'Swing Point Entry', description: 'Enter at swing high/low with confirmation' },
+      { name: 'Multi-Day Hold', description: 'Hold positions for 2-10 days minimum' },
+      { name: 'Wide Stop Loss', description: 'Stop loss beyond daily ATR' },
+      { name: 'Partial Profit Taking', description: 'Take partials at 1:1 and 1:2 R:R' },
+      { name: 'Fundamental Alignment', description: 'Check news/fundamentals support the direction' }
+    ]
+  }
+];
 
 export function Strategies() {
   const [activeTab, setActiveTab] = useState('evaluate');
@@ -42,6 +181,10 @@ export function Strategies() {
   const [strategyName, setStrategyName] = useState('');
   const [strategyDesc, setStrategyDesc] = useState('');
   const [newRules, setNewRules] = useState([{ name: '', description: '' }]);
+
+  // Preset strategy modal
+  const [showPresetModal, setShowPresetModal] = useState(false);
+  const [selectedPreset, setSelectedPreset] = useState(null);
 
   // Evaluation state
   const [evalResult, setEvalResult] = useState(null);
@@ -119,6 +262,26 @@ export function Strategies() {
       }
     } catch (error) {
       alert('Failed to delete strategy');
+    }
+  };
+
+  const handleInstallPreset = async (preset) => {
+    try {
+      setLoading(true);
+      await api.post('/strategies', {
+        name: preset.name,
+        description: preset.description,
+        rules: preset.rules.map(r => ({ name: r.name, description: r.description }))
+      });
+
+      setShowPresetModal(false);
+      setSelectedPreset(null);
+      fetchStrategies();
+      alert(`${preset.name} strategy installed successfully!`);
+    } catch (error) {
+      alert(error.response?.data?.error || 'Failed to install strategy');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -287,43 +450,87 @@ export function Strategies() {
         <div className="space-y-6">
           {/* Strategy Selector */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-            <h3 className="font-bold text-gray-900 dark:text-white mb-4">Select Strategy (Optional)</h3>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setSelectedStrategy(null)}
-                className={`px-4 py-2 rounded-xl font-medium transition-all ${
-                  !selectedStrategy
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-                }`}
-              >
-                No Strategy
-              </button>
-              {strategies.map(s => (
-                <button
-                  key={s.id}
-                  onClick={() => setSelectedStrategy(s)}
-                  className={`px-4 py-2 rounded-xl font-medium transition-all ${
-                    selectedStrategy?.id === s.id
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-                  }`}
-                >
-                  {s.name}
-                </button>
-              ))}
-            </div>
-            {selectedStrategy && selectedStrategy.rules?.length > 0 && (
-              <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Rules to evaluate:</p>
-                <ul className="text-sm space-y-1">
-                  {selectedStrategy.rules.map((r, i) => (
-                    <li key={r.id} className="text-gray-700 dark:text-gray-300">
-                      {i + 1}. {r.rule_name}
-                    </li>
-                  ))}
-                </ul>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-bold text-gray-900 dark:text-white">Select Strategy</h3>
+                <p className="text-sm text-gray-500">AI will evaluate your trade against the selected strategy's rules</p>
               </div>
+              {strategies.length === 0 && (
+                <button
+                  onClick={() => setActiveTab('strategies')}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl text-sm font-medium hover:shadow-lg transition-all"
+                >
+                  <Download className="w-4 h-4" />
+                  Install Strategies
+                </button>
+              )}
+            </div>
+
+            {strategies.length === 0 ? (
+              <div className="text-center py-8 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                <Target className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-500 dark:text-gray-400 mb-2">No strategies installed yet</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">
+                  Go to the Strategies tab to install pro trading strategies or create your own
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  <button
+                    onClick={() => setSelectedStrategy(null)}
+                    className={`p-4 rounded-xl font-medium transition-all text-center border-2 ${
+                      !selectedStrategy
+                        ? 'bg-gray-100 dark:bg-gray-700 border-gray-400 dark:border-gray-500'
+                        : 'bg-gray-50 dark:bg-gray-700/50 border-transparent hover:border-gray-200 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <XCircle className={`w-6 h-6 mx-auto mb-2 ${!selectedStrategy ? 'text-gray-600 dark:text-gray-300' : 'text-gray-400'}`} />
+                    <span className={!selectedStrategy ? 'text-gray-900 dark:text-white' : 'text-gray-500'}>General Analysis</span>
+                    <p className="text-xs text-gray-400 mt-1">No specific rules</p>
+                  </button>
+
+                  {strategies.map(s => {
+                    const preset = PRESET_STRATEGIES.find(p => p.name === s.name);
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => setSelectedStrategy(s)}
+                        className={`p-4 rounded-xl font-medium transition-all text-center border-2 ${
+                          selectedStrategy?.id === s.id
+                            ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500'
+                            : 'bg-gray-50 dark:bg-gray-700/50 border-transparent hover:border-gray-200 dark:hover:border-gray-600'
+                        }`}
+                      >
+                        <span className="text-2xl block mb-2">{preset?.icon || '📋'}</span>
+                        <span className={`block truncate ${selectedStrategy?.id === s.id ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                          {s.name.split('(')[0].trim()}
+                        </span>
+                        <p className="text-xs text-gray-400 mt-1">{s.rules?.length || 0} rules</p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {selectedStrategy && selectedStrategy.rules?.length > 0 && (
+                  <div className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                    <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mb-3 flex items-center gap-2">
+                      <Shield className="w-4 h-4" />
+                      Rules AI will evaluate:
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-2">
+                      {selectedStrategy.rules.map((r, i) => (
+                        <div key={r.id} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                          <div className="w-5 h-5 rounded-full bg-emerald-200 dark:bg-emerald-800 flex items-center justify-center text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                            {i + 1}
+                          </div>
+                          {r.rule_name}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -776,6 +983,155 @@ export function Strategies() {
       {/* Strategies Tab */}
       {activeTab === 'strategies' && (
         <div className="space-y-6">
+          {/* Preset Strategies Section */}
+          <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl p-6 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">Pro Trading Strategies</h2>
+                  <p className="text-white/80 text-sm">Install proven strategies used by professional traders</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPresetModal(true)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl font-medium transition-all"
+              >
+                <Layers className="w-5 h-5" />
+                Browse All
+              </button>
+            </div>
+
+            {/* Quick preset cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {PRESET_STRATEGIES.slice(0, 4).map(preset => (
+                <button
+                  key={preset.id}
+                  onClick={() => { setSelectedPreset(preset); setShowPresetModal(true); }}
+                  className="p-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-left transition-all group"
+                >
+                  <span className="text-2xl mb-2 block">{preset.icon}</span>
+                  <p className="font-semibold text-sm">{preset.name.split('(')[0].trim()}</p>
+                  <p className="text-xs text-white/60 mt-1">{preset.rules.length} rules</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Preset Strategy Modal */}
+          {showPresetModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">Pro Trading Strategies</h3>
+                      <p className="text-gray-500 text-sm">Select a strategy to install and use for trade evaluation</p>
+                    </div>
+                    <button
+                      onClick={() => { setShowPresetModal(false); setSelectedPreset(null); }}
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl"
+                    >
+                      <X className="w-5 h-5 text-gray-500" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6 overflow-y-auto max-h-[60vh]">
+                  {!selectedPreset ? (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {PRESET_STRATEGIES.map(preset => (
+                        <button
+                          key={preset.id}
+                          onClick={() => setSelectedPreset(preset)}
+                          className="p-5 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl text-left transition-all group border border-transparent hover:border-gray-200 dark:hover:border-gray-600"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${preset.color} flex items-center justify-center text-2xl shadow-lg`}>
+                              {preset.icon}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-bold text-gray-900 dark:text-white">{preset.name}</h4>
+                              </div>
+                              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{preset.description}</p>
+                              <div className="flex items-center gap-3">
+                                <span className={`text-xs px-2 py-1 rounded-full ${
+                                  preset.difficulty === 'Beginner' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                  preset.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                                  'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                }`}>
+                                  {preset.difficulty}
+                                </span>
+                                <span className="text-xs text-gray-400">{preset.rules.length} rules</span>
+                              </div>
+                            </div>
+                            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div>
+                      <button
+                        onClick={() => setSelectedPreset(null)}
+                        className="flex items-center gap-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mb-4"
+                      >
+                        <ChevronRight className="w-4 h-4 rotate-180" />
+                        Back to all strategies
+                      </button>
+
+                      <div className={`p-6 rounded-2xl bg-gradient-to-br ${selectedPreset.color} text-white mb-6`}>
+                        <div className="flex items-center gap-4 mb-4">
+                          <span className="text-4xl">{selectedPreset.icon}</span>
+                          <div>
+                            <h3 className="text-2xl font-bold">{selectedPreset.name}</h3>
+                            <p className="text-white/80">{selectedPreset.description}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="px-3 py-1 bg-white/20 rounded-full text-sm">{selectedPreset.difficulty}</span>
+                          <span className="px-3 py-1 bg-white/20 rounded-full text-sm">{selectedPreset.rules.length} Rules</span>
+                        </div>
+                      </div>
+
+                      <h4 className="font-bold text-gray-900 dark:text-white mb-4">Strategy Rules</h4>
+                      <div className="space-y-3 mb-6">
+                        {selectedPreset.rules.map((rule, i) => (
+                          <div key={i} className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                              <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900 dark:text-white">{rule.name}</p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">{rule.description}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        onClick={() => handleInstallPreset(selectedPreset)}
+                        disabled={loading}
+                        className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold text-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                      >
+                        {loading ? (
+                          <RefreshCw className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Download className="w-5 h-5" />
+                        )}
+                        Install Strategy
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* My Strategies Header */}
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">My Trading Strategies</h2>
             <button
@@ -783,7 +1139,7 @@ export function Strategies() {
               className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600"
             >
               <Plus className="w-5 h-5" />
-              New Strategy
+              Custom Strategy
             </button>
           </div>
 
