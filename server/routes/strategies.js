@@ -401,31 +401,49 @@ If you cannot read the image clearly, set confidence to a low number and explain
     });
   } catch (error) {
     console.error('Evaluation error:', error);
+    console.error('Error details:', JSON.stringify({
+      message: error.message,
+      status: error.status,
+      code: error.code,
+      type: error.type,
+      error: error.error
+    }, null, 2));
 
     if (req.file) {
       fs.unlink(req.file.path, () => {});
     }
 
-    if (error.message.includes('ANTHROPIC_API_KEY')) {
+    if (error.message?.includes('ANTHROPIC_API_KEY')) {
       return res.status(503).json({ error: 'AI service not configured. Please set ANTHROPIC_API_KEY.' });
     }
 
     // Handle Anthropic API errors
-    if (error.status === 401 || error.message?.includes('authentication') || error.message?.includes('invalid_api_key')) {
+    if (error.status === 401 || error.message?.includes('authentication') || error.message?.includes('invalid_api_key') || error.error?.type === 'authentication_error') {
       return res.status(503).json({
-        error: 'Invalid API key. Please check your ANTHROPIC_API_KEY.'
+        error: 'Invalid API key. Please check your ANTHROPIC_API_KEY.',
+        details: error.message
       });
     }
 
-    if (error.status === 400 || error.message?.includes('invalid_request')) {
+    if (error.status === 400 || error.message?.includes('invalid_request') || error.error?.type === 'invalid_request_error') {
       return res.status(400).json({
-        error: 'Invalid request to AI service. Please try a different image.'
+        error: 'Invalid request to AI service. Please try a different image.',
+        details: error.message || error.error?.message
       });
     }
 
-    if (error.status === 429) {
+    if (error.status === 429 || error.error?.type === 'rate_limit_error') {
       return res.status(429).json({
-        error: 'Rate limit exceeded. Please wait a moment and try again.'
+        error: 'Rate limit exceeded. Please wait a moment and try again.',
+        details: error.message
+      });
+    }
+
+    // Handle model not found errors
+    if (error.status === 404 || error.message?.includes('model') || error.error?.type === 'not_found_error') {
+      return res.status(400).json({
+        error: 'AI model not found. The model may have been deprecated.',
+        details: error.message || error.error?.message
       });
     }
 
@@ -437,8 +455,8 @@ If you cannot read the image clearly, set confidence to a low number and explain
     }
 
     res.status(500).json({
-      error: 'Failed to analyze image',
-      details: error.message || 'Unknown error occurred'
+      error: 'Failed to analyze image. Please try again.',
+      details: error.message || error.error?.message || 'Unknown error occurred'
     });
   }
 });
