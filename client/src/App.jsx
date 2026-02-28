@@ -10,6 +10,7 @@ import { ScalpTrading } from './pages/ScalpTrading';
 import { Journal } from './pages/Journal';
 import { Analysis } from './pages/Analysis';
 import { Analytics } from './pages/Analytics';
+import { AdvancedAnalytics } from './pages/AdvancedAnalytics';
 import { TradeHistory } from './pages/TradeHistory';
 import { Learning } from './pages/Learning';
 import { Plans } from './pages/Plans';
@@ -17,6 +18,8 @@ import { Settings } from './pages/Settings';
 import { Support } from './pages/Support';
 import { Market } from './pages/Market';
 import { Strategies } from './pages/Strategies';
+import { Social } from './pages/Social';
+import { Alerts } from './pages/Alerts';
 
 function App() {
   return (
@@ -33,6 +36,7 @@ function App() {
               <Route path="/journal" element={<Journal />} />
               <Route path="/analysis" element={<Analysis />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="/advanced-analytics" element={<AdvancedAnalytics />} />
               <Route path="/history" element={<TradeHistory />} />
               <Route path="/learning" element={<Learning />} />
               <Route path="/plans" element={<Plans />} />
@@ -40,6 +44,8 @@ function App() {
               <Route path="/support" element={<Support />} />
               <Route path="/market" element={<Market />} />
               <Route path="/strategies" element={<Strategies />} />
+              <Route path="/social" element={<Social />} />
+              <Route path="/alerts" element={<Alerts />} />
             </Route>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

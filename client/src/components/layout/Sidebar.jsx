@@ -13,7 +13,11 @@ import {
   Activity,
   Globe,
   Target,
-  X
+  X,
+  BarChart3,
+  Bell,
+  Users,
+  LineChart
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -29,21 +33,24 @@ const navGroups = [
   {
     title: 'AI POWERED',
     items: [
-      { path: '/strategies', icon: Target, label: 'Strategies', badge: 'New', gradient: 'from-emerald-500 to-teal-500' },
+      { path: '/strategies', icon: Target, label: 'Strategies', badge: 'AI', gradient: 'from-emerald-500 to-teal-500' },
       { path: '/market', icon: Globe, label: 'Market Intel', gradient: 'from-cyan-500 to-blue-500' },
+      { path: '/alerts', icon: Bell, label: 'Price Alerts', badge: 'Live', gradient: 'from-amber-500 to-orange-500' },
     ]
   },
   {
-    title: 'ANALYSIS',
+    title: 'ANALYTICS',
     items: [
-      { path: '/analytics', icon: Activity, label: 'Analytics', gradient: 'from-violet-500 to-purple-500' },
+      { path: '/analytics', icon: Activity, label: 'Overview', gradient: 'from-violet-500 to-purple-500' },
+      { path: '/advanced-analytics', icon: LineChart, label: 'Advanced', badge: 'Pro', gradient: 'from-indigo-500 to-purple-500' },
       { path: '/journal', icon: BookOpen, label: 'Journal', gradient: 'from-pink-500 to-rose-500' },
       { path: '/history', icon: History, label: 'Trade History', gradient: 'from-indigo-500 to-blue-500' },
     ]
   },
   {
-    title: 'LEARN',
+    title: 'COMMUNITY',
     items: [
+      { path: '/social', icon: Users, label: 'Social Hub', badge: 'New', gradient: 'from-pink-500 to-purple-500' },
       { path: '/learning', icon: GraduationCap, label: 'Learning', gradient: 'from-cyan-500 to-blue-500' },
     ]
   },
@@ -127,7 +134,15 @@ export function Sidebar({ onClose }) {
                         </div>
                         <div className="flex items-center gap-2">
                           {badge && !isActive && (
-                            <span className="px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-full shadow-sm">
+                            <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full shadow-sm ${
+                              badge === 'Live'
+                                ? 'bg-gradient-to-r from-emerald-400 to-green-500 text-white'
+                                : badge === 'Pro'
+                                ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white'
+                                : badge === 'AI'
+                                ? 'bg-gradient-to-r from-purple-400 to-pink-500 text-white'
+                                : 'bg-gradient-to-r from-indigo-400 to-purple-500 text-white'
+                            }`}>
                               {badge}
                             </span>
                           )}
