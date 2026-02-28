@@ -369,85 +369,230 @@ export function Strategies() {
             </div>
           )}
 
-          {/* Edit/Confirm Section */}
+          {/* Edit/Confirm Section - Analysis Results */}
           {editMode && editedData && (
             <div className="space-y-6">
+              {/* Close Button */}
+              <div className="flex justify-end">
+                <button
+                  onClick={() => { setEditMode(false); setEvalResult(null); setEditedData(null); }}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-xl transition-all"
+                >
+                  <X className="w-4 h-4" />
+                  Cancel
+                </button>
+              </div>
+
+              {/* Pattern Analysis Section */}
               <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Edit3 className="w-5 h-5 text-emerald-500" />
-                    Confirm Extracted Data
-                  </h3>
-                  <button
-                    onClick={() => { setEditMode(false); setEvalResult(null); setEditedData(null); }}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+                <div className="flex items-center gap-2 mb-6">
+                  <BarChart3 className="w-5 h-5 text-indigo-500" />
+                  <h3 className="font-bold text-gray-900 dark:text-white">Pattern Analysis</h3>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg text-sm font-medium">
+                    {editedData.timeframe || '1H'} Timeframe
+                  </span>
+                  <input
+                    type="text"
+                    value={editedData.timeframe || ''}
+                    onChange={e => setEditedData({ ...editedData, timeframe: e.target.value })}
+                    placeholder="e.g., 1H, 4H, D"
+                    className="px-3 py-1.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm w-24"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-8">
+                  {/* Current Price / Entry */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ticker/Pair</label>
-                    <input
-                      type="text"
-                      value={editedData.ticker || ''}
-                      onChange={e => setEditedData({ ...editedData, ticker: e.target.value })}
-                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Direction</label>
-                    <select
-                      value={editedData.direction || ''}
-                      onChange={e => setEditedData({ ...editedData, direction: e.target.value })}
-                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg"
-                    >
-                      <option value="">Select</option>
-                      <option value="long">Long</option>
-                      <option value="short">Short</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Entry Price</label>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Entry Price</p>
                     <input
                       type="number"
                       step="any"
                       value={editedData.entry_price || ''}
                       onChange={e => setEditedData({ ...editedData, entry_price: parseFloat(e.target.value) || null })}
-                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg"
+                      className="text-4xl font-bold text-gray-900 dark:text-white bg-transparent border-b-2 border-gray-200 dark:border-gray-700 focus:border-indigo-500 outline-none w-full"
                     />
                   </div>
+
+                  {/* Trade Direction */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stop Loss</label>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Trade Direction</p>
+                    <div className="flex items-center gap-4">
+                      <div className={`w-1.5 h-12 rounded-full ${editedData.direction === 'long' ? 'bg-green-500' : 'bg-red-500'}`} />
+                      <div>
+                        <button
+                          onClick={() => setEditedData({ ...editedData, direction: editedData.direction === 'long' ? 'short' : 'long' })}
+                          className={`text-3xl font-bold ${editedData.direction === 'long' ? 'text-green-500' : 'text-red-500'}`}
+                        >
+                          {editedData.direction === 'long' ? 'Buy' : 'Sell'}
+                        </button>
+                        <p className="text-sm text-gray-500">
+                          {editedData.direction === 'long' ? 'Enter long position' : 'Enter short position'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ticker Input */}
+                <div className="mt-6 flex items-center gap-4">
+                  <label className="text-sm text-gray-500">Ticker/Pair:</label>
+                  <input
+                    type="text"
+                    value={editedData.ticker || ''}
+                    onChange={e => setEditedData({ ...editedData, ticker: e.target.value.toUpperCase() })}
+                    className="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-lg"
+                    placeholder="SPY, BTC, etc."
+                  />
+                </div>
+              </div>
+
+              {/* Risk Management Section */}
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">
+                <div className="flex items-center gap-2 mb-6">
+                  <Target className="w-5 h-5 text-indigo-500" />
+                  <h3 className="font-bold text-gray-900 dark:text-white">Risk Management</h3>
+                </div>
+
+                {/* Active Risk Parameters */}
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 mb-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Active Risk Parameters</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                      <p className="text-xs text-gray-500 mb-1">Risk %</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        {editedData.entry_price && editedData.stop_loss
+                          ? `${Math.abs(((editedData.stop_loss - editedData.entry_price) / editedData.entry_price) * 100).toFixed(2)}%`
+                          : '0.00%'}
+                      </p>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                      <p className="text-xs text-gray-500 mb-1">R:R Ratio</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        {editedData.entry_price && editedData.stop_loss && editedData.targets?.[0]
+                          ? `1:${Math.abs((editedData.targets[0] - editedData.entry_price) / (editedData.entry_price - editedData.stop_loss)).toFixed(1)}`
+                          : '1:0'}
+                      </p>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                      <p className="text-xs text-gray-500 mb-1">Entry</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">{editedData.entry_price || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Visual Price Levels */}
+                <div className="relative py-8 mb-6">
+                  <div className="absolute inset-x-0 top-1/2 h-1 bg-gradient-to-r from-green-400 via-blue-400 to-red-400 rounded-full" />
+
+                  <div className="relative flex justify-between items-center">
+                    {/* Take Profit */}
+                    {editedData.targets?.[0] && (
+                      <div className="flex flex-col items-center">
+                        <span className="px-2 py-1 bg-green-500 text-white text-xs font-bold rounded mb-2">TP1</span>
+                        <div className="w-4 h-4 bg-green-500 rounded-full border-4 border-white dark:border-gray-800 shadow-lg" />
+                        <div className="w-0.5 h-6 bg-green-500" />
+                      </div>
+                    )}
+
+                    {/* Entry */}
+                    <div className="flex flex-col items-center">
+                      <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded mb-2">ENT</span>
+                      <div className="w-4 h-4 bg-blue-500 rounded-full border-4 border-white dark:border-gray-800 shadow-lg" />
+                      <div className="w-0.5 h-6 bg-blue-500" />
+                    </div>
+
+                    {/* Stop Loss */}
+                    <div className="flex flex-col items-center">
+                      <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded mb-2">SL</span>
+                      <div className="w-4 h-4 bg-red-500 rounded-full border-4 border-white dark:border-gray-800 shadow-lg" />
+                      <div className="w-0.5 h-6 bg-red-500" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Price Level Cards */}
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Stop Loss Card */}
+                  <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-100 dark:border-red-800">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Stop Loss</p>
                     <input
                       type="number"
                       step="any"
                       value={editedData.stop_loss || ''}
                       onChange={e => setEditedData({ ...editedData, stop_loss: parseFloat(e.target.value) || null })}
-                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg"
+                      className="text-2xl font-bold text-red-600 bg-transparent w-full outline-none"
+                      placeholder="0.00"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Risk: {editedData.entry_price && editedData.stop_loss
+                        ? `${Math.abs(((editedData.stop_loss - editedData.entry_price) / editedData.entry_price) * 100).toFixed(2)}%`
+                        : '0%'}
+                    </p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Timeframe</label>
+
+                  {/* R:R Card */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-100 dark:border-blue-800">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Risk : Reward</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold text-blue-600">
+                        1:{editedData.entry_price && editedData.stop_loss && editedData.targets?.[0]
+                          ? Math.abs((editedData.targets[0] - editedData.entry_price) / (editedData.entry_price - editedData.stop_loss)).toFixed(1)
+                          : '0'}
+                      </span>
+                      {editedData.entry_price && editedData.stop_loss && editedData.targets?.[0] &&
+                        Math.abs((editedData.targets[0] - editedData.entry_price) / (editedData.entry_price - editedData.stop_loss)) >= 2 && (
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Reward: {editedData.entry_price && editedData.targets?.[0]
+                        ? `${Math.abs(((editedData.targets[0] - editedData.entry_price) / editedData.entry_price) * 100).toFixed(1)}%`
+                        : '0%'}
+                    </p>
+                  </div>
+
+                  {/* Take Profit Card */}
+                  <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-100 dark:border-green-800">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Take Profit</p>
                     <input
-                      type="text"
-                      value={editedData.timeframe || ''}
-                      onChange={e => setEditedData({ ...editedData, timeframe: e.target.value })}
-                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg"
+                      type="number"
+                      step="any"
+                      value={editedData.targets?.[0] || ''}
+                      onChange={e => setEditedData({ ...editedData, targets: [parseFloat(e.target.value) || null] })}
+                      className="text-2xl font-bold text-green-600 bg-transparent w-full outline-none"
+                      placeholder="0.00"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Reward: {editedData.entry_price && editedData.targets?.[0]
+                        ? `${Math.abs(((editedData.targets[0] - editedData.entry_price) / editedData.entry_price) * 100).toFixed(1)}%`
+                        : '0%'}
+                    </p>
                   </div>
+                </div>
+              </div>
+
+              {/* Additional Details */}
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4">Additional Details</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Trade Date</label>
+                    <label className="block text-sm text-gray-500 mb-1">Trade Date</label>
                     <input
                       type="text"
                       value={editedData.trade_date || ''}
                       onChange={e => setEditedData({ ...editedData, trade_date: e.target.value })}
                       className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg"
+                      placeholder="MM/DD/YYYY"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">P&L ($)</label>
+                    <label className="block text-sm text-gray-500 mb-1">P&L ($)</label>
                     <input
                       type="number"
                       step="any"
@@ -457,7 +602,7 @@ export function Strategies() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">P&L (R)</label>
+                    <label className="block text-sm text-gray-500 mb-1">P&L (R)</label>
                     <input
                       type="number"
                       step="any"
@@ -466,88 +611,112 @@ export function Strategies() {
                       className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm text-gray-500 mb-1">Confidence</label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"
+                          style={{ width: `${editedData.confidence || 0}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{editedData.confidence || 0}%</span>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Setup Notes</label>
+                <div>
+                  <label className="block text-sm text-gray-500 mb-1">Setup Notes</label>
                   <textarea
                     value={editedData.setup_notes || ''}
                     onChange={e => setEditedData({ ...editedData, setup_notes: e.target.value })}
                     rows={2}
                     className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg"
+                    placeholder="Add any notes about this setup..."
                   />
                 </div>
+              </div>
 
-                {/* Trade Outcome */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Trade Outcome *</label>
-                  <div className="flex gap-3">
-                    {['win', 'loss', 'breakeven'].map(outcome => (
-                      <button
-                        key={outcome}
-                        onClick={() => setEditedData({ ...editedData, outcome })}
-                        className={`flex-1 py-3 rounded-xl font-medium transition-all ${
-                          editedData.outcome === outcome
-                            ? outcome === 'win' ? 'bg-green-500 text-white' :
-                              outcome === 'loss' ? 'bg-red-500 text-white' :
-                              'bg-gray-500 text-white'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-                        }`}
-                      >
-                        {outcome === 'win' && <TrendingUp className="w-4 h-4 inline mr-2" />}
-                        {outcome === 'loss' && <TrendingDown className="w-4 h-4 inline mr-2" />}
-                        {outcome.charAt(0).toUpperCase() + outcome.slice(1)}
-                      </button>
-                    ))}
-                  </div>
+              {/* Trade Outcome */}
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4">Trade Outcome *</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {[
+                    { id: 'win', label: 'Winner', icon: TrendingUp, color: 'green', bg: 'bg-green-500' },
+                    { id: 'loss', label: 'Loser', icon: TrendingDown, color: 'red', bg: 'bg-red-500' },
+                    { id: 'breakeven', label: 'Breakeven', icon: Activity, color: 'gray', bg: 'bg-gray-500' }
+                  ].map(outcome => (
+                    <button
+                      key={outcome.id}
+                      onClick={() => setEditedData({ ...editedData, outcome: outcome.id })}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        editedData.outcome === outcome.id
+                          ? `${outcome.bg} border-transparent text-white shadow-lg`
+                          : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:border-gray-300'
+                      }`}
+                    >
+                      <outcome.icon className={`w-8 h-8 mx-auto mb-2 ${editedData.outcome === outcome.id ? 'text-white' : `text-${outcome.color}-500`}`} />
+                      <p className={`font-bold ${editedData.outcome === outcome.id ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                        {outcome.label}
+                      </p>
+                    </button>
+                  ))}
                 </div>
               </div>
 
               {/* Rule Results */}
               {editedData.rule_results?.length > 0 && (
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <ListChecks className="w-5 h-5 text-emerald-500" />
-                    Rule Compliance
-                    <span className={`ml-auto px-3 py-1 rounded-full text-sm font-bold ${
-                      editedData.compliance_score >= 80 ? 'bg-green-100 text-green-600' :
-                      editedData.compliance_score >= 50 ? 'bg-yellow-100 text-yellow-600' :
-                      'bg-red-100 text-red-600'
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <ListChecks className="w-5 h-5 text-indigo-500" />
+                      <h3 className="font-bold text-gray-900 dark:text-white">Strategy Compliance</h3>
+                    </div>
+                    <div className={`px-4 py-2 rounded-xl font-bold text-lg ${
+                      editedData.compliance_score >= 80 ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' :
+                      editedData.compliance_score >= 50 ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                      'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                     }`}>
-                      {editedData.compliance_score}%
-                    </span>
-                  </h3>
+                      {editedData.compliance_score}% Score
+                    </div>
+                  </div>
                   <div className="space-y-3">
                     {editedData.rule_results.map((rule, i) => (
-                      <div key={i} className={`flex items-center justify-between p-4 rounded-xl ${
-                        rule.passed ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'
-                      }`}>
+                      <div
+                        key={i}
+                        onClick={() => {
+                          const updated = [...editedData.rule_results];
+                          updated[i].passed = !updated[i].passed;
+                          const passedCount = updated.filter(r => r.passed).length;
+                          setEditedData({
+                            ...editedData,
+                            rule_results: updated,
+                            compliance_score: Math.round((passedCount / updated.length) * 100)
+                          });
+                        }}
+                        className={`flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all ${
+                          rule.passed
+                            ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+                            : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+                        }`}
+                      >
                         <div className="flex items-center gap-3">
                           {rule.passed ? (
-                            <CheckCircle className="w-5 h-5 text-green-500" />
+                            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                              <Check className="w-5 h-5 text-white" />
+                            </div>
                           ) : (
-                            <XCircle className="w-5 h-5 text-red-500" />
+                            <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                              <X className="w-5 h-5 text-white" />
+                            </div>
                           )}
                           <div>
                             <p className="font-medium text-gray-900 dark:text-white">{rule.rule_name}</p>
                             <p className="text-sm text-gray-500">{rule.reasoning}</p>
                           </div>
                         </div>
-                        <button
-                          onClick={() => {
-                            const updated = [...editedData.rule_results];
-                            updated[i].passed = !updated[i].passed;
-                            const passedCount = updated.filter(r => r.passed).length;
-                            setEditedData({
-                              ...editedData,
-                              rule_results: updated,
-                              compliance_score: Math.round((passedCount / updated.length) * 100)
-                            });
-                          }}
-                          className="text-sm text-gray-500 hover:text-gray-700"
-                        >
-                          Toggle
-                        </button>
+                        <span className={`text-sm font-medium ${rule.passed ? 'text-green-600' : 'text-red-600'}`}>
+                          {rule.passed ? 'PASS' : 'FAIL'}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -555,21 +724,22 @@ export function Strategies() {
               )}
 
               {/* AI Feedback & Tags */}
-              <div className="grid grid-cols-2 gap-6">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-4">AI Feedback</h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">{editedData.overall_feedback}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white">
+                  <h3 className="font-bold mb-4 flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5" />
+                    AI Analysis
+                  </h3>
+                  <p className="text-white/90 mb-4">{editedData.overall_feedback}</p>
                   {editedData.improvements?.length > 0 && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Improvements:</p>
-                      <ul className="text-sm text-gray-500 space-y-1">
-                        {editedData.improvements.map((imp, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                            {imp}
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-white/70">Suggestions:</p>
+                      {editedData.improvements.map((imp, i) => (
+                        <div key={i} className="flex items-start gap-2 text-sm text-white/80">
+                          <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                          {imp}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -577,12 +747,12 @@ export function Strategies() {
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">
                   <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                     <Tag className="w-5 h-5 text-emerald-500" />
-                    Suggested Tags
+                    Tags
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {editedData.suggested_tags?.map((tag, i) => (
-                      <span key={i} className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full text-sm font-medium">
-                        {tag}
+                      <span key={i} className="px-4 py-2 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium">
+                        #{tag}
                       </span>
                     ))}
                   </div>
@@ -592,11 +762,11 @@ export function Strategies() {
               {/* Save Button */}
               <button
                 onClick={handleSaveEvaluation}
-                disabled={loading}
-                className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                disabled={loading || !editedData.outcome}
+                className="w-full py-5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-bold text-lg hover:shadow-xl hover:scale-[1.01] transition-all disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3"
               >
-                {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                Save Evaluation
+                {loading ? <RefreshCw className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
+                Save Trade Evaluation
               </button>
             </div>
           )}
