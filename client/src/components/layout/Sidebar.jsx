@@ -13,6 +13,7 @@ import {
   Activity,
   Globe,
   Brain,
+  Target,
   X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -29,7 +30,8 @@ const navGroups = [
   {
     title: 'AI POWERED',
     items: [
-      { path: '/ai-insights', icon: Brain, label: 'AI Assistant', badge: 'Pro', gradient: 'from-purple-500 to-pink-500' },
+      { path: '/strategies', icon: Target, label: 'Strategies', badge: 'New', gradient: 'from-emerald-500 to-teal-500' },
+      { path: '/ai-insights', icon: Brain, label: 'AI Signals', gradient: 'from-purple-500 to-pink-500' },
       { path: '/market', icon: Globe, label: 'Market Intel', gradient: 'from-cyan-500 to-blue-500' },
     ]
   },

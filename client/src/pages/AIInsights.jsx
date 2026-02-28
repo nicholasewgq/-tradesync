@@ -5,31 +5,20 @@ import {
   TrendingDown,
   Target,
   Zap,
-  Award,
   AlertTriangle,
-  CheckCircle,
-  Clock,
   RefreshCw,
-  ChevronRight,
   Sparkles,
-  BookOpen,
   BarChart3,
   Flame,
   Shield,
-  Lightbulb,
-  Calendar,
-  ArrowUpRight,
-  ArrowDownRight
+  Calendar
 } from 'lucide-react';
 import { api } from '../utils/api';
 
 export function AIInsights() {
-  const [activeTab, setActiveTab] = useState('coach');
+  const [activeTab, setActiveTab] = useState('signals');
   const [loading, setLoading] = useState(false);
   const [apiStatus, setApiStatus] = useState(null);
-
-  // Coach state
-  const [coachAnalysis, setCoachAnalysis] = useState(null);
 
   // Signals state
   const [signalSymbol, setSignalSymbol] = useState('SPY');
@@ -49,19 +38,6 @@ export function AIInsights() {
       setApiStatus(response.data);
     } catch {
       setApiStatus({ configured: false });
-    }
-  };
-
-  const fetchCoachAnalysis = async () => {
-    setLoading(true);
-    try {
-      const response = await api.post('/ai/coach');
-      setCoachAnalysis(response.data);
-    } catch (error) {
-      console.error('Coach error:', error);
-      alert(error.response?.data?.error || 'Failed to get coaching analysis');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -96,17 +72,6 @@ export function AIInsights() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getGradeColor = (grade) => {
-    const colors = {
-      'A': 'text-green-500 bg-green-100 dark:bg-green-900/30',
-      'B': 'text-blue-500 bg-blue-100 dark:bg-blue-900/30',
-      'C': 'text-yellow-500 bg-yellow-100 dark:bg-yellow-900/30',
-      'D': 'text-orange-500 bg-orange-100 dark:bg-orange-900/30',
-      'F': 'text-red-500 bg-red-100 dark:bg-red-900/30'
-    };
-    return colors[grade] || colors['C'];
   };
 
   if (!apiStatus?.configured) {
@@ -177,7 +142,6 @@ export function AIInsights() {
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
         {[
-          { id: 'coach', label: 'Trade Coach', icon: Award },
           { id: 'signals', label: 'Smart Signals', icon: Target },
           { id: 'market', label: 'Market Summary', icon: BarChart3 }
         ].map(tab => (
@@ -195,148 +159,6 @@ export function AIInsights() {
           </button>
         ))}
       </div>
-
-      {/* Trade Coach Tab */}
-      {activeTab === 'coach' && (
-        <div className="space-y-6">
-          {!coachAnalysis ? (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200/50 dark:border-gray-700/50">
-              <Award className="w-16 h-16 text-purple-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">AI Trade Coach</h2>
-              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                Get personalized coaching based on your trading history. The AI will analyze your patterns, identify weaknesses, and give actionable advice.
-              </p>
-              <button
-                onClick={fetchCoachAnalysis}
-                disabled={loading}
-                className="px-8 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2 mx-auto"
-              >
-                {loading ? (
-                  <>
-                    <RefreshCw className="w-5 h-5 animate-spin" />
-                    Analyzing Your Trades...
-                  </>
-                ) : (
-                  <>
-                    <Brain className="w-5 h-5" />
-                    Analyze My Trading
-                  </>
-                )}
-              </button>
-            </div>
-          ) : (
-            <>
-              {/* Grade Card */}
-              <div className="grid grid-cols-4 gap-4">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 text-center">
-                  <div className={`w-20 h-20 rounded-2xl ${getGradeColor(coachAnalysis.analysis.overallGrade)} flex items-center justify-center mx-auto mb-3`}>
-                    <span className="text-4xl font-bold">{coachAnalysis.analysis.overallGrade}</span>
-                  </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Overall Grade</p>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Trades</p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{coachAnalysis.stats.totalTrades}</p>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Win Rate</p>
-                  <p className="text-3xl font-bold text-green-500">{coachAnalysis.stats.winRate}%</p>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total P/L</p>
-                  <p className={`text-3xl font-bold ${coachAnalysis.stats.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {coachAnalysis.stats.totalProfit >= 0 ? '+' : ''}${coachAnalysis.stats.totalProfit.toFixed(2)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Focus Area */}
-              <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-6 text-white">
-                <div className="flex items-center gap-3 mb-2">
-                  <Flame className="w-6 h-6" />
-                  <h3 className="text-lg font-bold">Focus Area</h3>
-                </div>
-                <p className="text-white/90 text-lg">{coachAnalysis.analysis.focusArea}</p>
-              </div>
-
-              {/* Strengths & Weaknesses */}
-              <div className="grid grid-cols-2 gap-6">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                    Strengths
-                  </h3>
-                  <ul className="space-y-3">
-                    {coachAnalysis.analysis.strengths.map((s, i) => (
-                      <li key={i} className="flex items-start gap-2 text-gray-600 dark:text-gray-300">
-                        <ArrowUpRight className="w-4 h-4 text-green-500 mt-1 flex-shrink-0" />
-                        {s}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5 text-amber-500" />
-                    Areas to Improve
-                  </h3>
-                  <ul className="space-y-3">
-                    {coachAnalysis.analysis.weaknesses.map((w, i) => (
-                      <li key={i} className="flex items-start gap-2 text-gray-600 dark:text-gray-300">
-                        <ArrowDownRight className="w-4 h-4 text-amber-500 mt-1 flex-shrink-0" />
-                        {w}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              {/* Recommendations */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Lightbulb className="w-5 h-5 text-amber-500" />
-                  Recommendations
-                </h3>
-                <div className="space-y-4">
-                  {coachAnalysis.analysis.recommendations.map((rec, i) => (
-                    <div key={i} className={`p-4 rounded-xl ${
-                      rec.priority === 'high' ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' :
-                      rec.priority === 'medium' ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800' :
-                      'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
-                    }`}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-xs font-bold uppercase ${
-                          rec.priority === 'high' ? 'text-red-600' :
-                          rec.priority === 'medium' ? 'text-amber-600' : 'text-blue-600'
-                        }`}>{rec.priority} priority</span>
-                      </div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white">{rec.title}</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{rec.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Motivation */}
-              <div className="bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl p-6 text-white">
-                <p className="text-lg italic">"{coachAnalysis.analysis.motivation}"</p>
-              </div>
-
-              <button
-                onClick={fetchCoachAnalysis}
-                className="w-full py-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-600 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Refresh Analysis
-              </button>
-            </>
-          )}
-        </div>
-      )}
 
       {/* Smart Signals Tab */}
       {activeTab === 'signals' && (

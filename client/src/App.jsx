@@ -17,6 +17,7 @@ import { Settings } from './pages/Settings';
 import { Support } from './pages/Support';
 import { Market } from './pages/Market';
 import { AIInsights } from './pages/AIInsights';
+import { Strategies } from './pages/Strategies';
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
               <Route path="/support" element={<Support />} />
               <Route path="/market" element={<Market />} />
               <Route path="/ai-insights" element={<AIInsights />} />
+              <Route path="/strategies" element={<Strategies />} />
             </Route>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

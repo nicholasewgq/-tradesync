@@ -12,6 +12,7 @@ import analyticsRoutes from './routes/analytics.js';
 import analyzeRoutes from './routes/analyze.js';
 import marketRoutes from './routes/market.js';
 import aiRoutes from './routes/ai.js';
+import strategiesRoutes from './routes/strategies.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,6 +42,7 @@ async function startServer() {
   app.use('/api/analyze', analyzeRoutes);
   app.use('/api/market', marketRoutes);
   app.use('/api/ai', aiRoutes);
+  app.use('/api/strategies', strategiesRoutes);
 
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
