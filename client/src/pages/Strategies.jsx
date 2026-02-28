@@ -597,123 +597,132 @@ export function Strategies() {
 
               {/* AI Trade Recommendation Section */}
               {editedData.trade_recommendation && (
-                <div className={`rounded-2xl p-6 border-2 ${
-                  editedData.trade_recommendation.action === 'BUY'
-                    ? 'bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500'
-                    : editedData.trade_recommendation.action === 'SELL'
-                    ? 'bg-gradient-to-br from-red-500/10 to-rose-500/10 border-red-500'
-                    : 'bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border-yellow-500'
-                }`}>
-                  <div className="flex items-center justify-between mb-6">
+                <div className="space-y-4">
+                  {/* Action Badge & Grade */}
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+                      <div className={`px-5 py-2.5 rounded-xl font-bold text-lg flex items-center gap-2 ${
                         editedData.trade_recommendation.action === 'BUY'
-                          ? 'bg-green-500'
+                          ? 'bg-emerald-500 text-white'
                           : editedData.trade_recommendation.action === 'SELL'
-                          ? 'bg-red-500'
-                          : 'bg-yellow-500'
+                          ? 'bg-rose-500 text-white'
+                          : 'bg-amber-500 text-white'
                       }`}>
                         {editedData.trade_recommendation.action === 'BUY' ? (
-                          <TrendingUp className="w-8 h-8 text-white" />
+                          <TrendingUp className="w-5 h-5" />
                         ) : editedData.trade_recommendation.action === 'SELL' ? (
-                          <TrendingDown className="w-8 h-8 text-white" />
+                          <TrendingDown className="w-5 h-5" />
                         ) : (
-                          <AlertTriangle className="w-8 h-8 text-white" />
+                          <AlertTriangle className="w-5 h-5" />
                         )}
+                        {editedData.trade_recommendation.action}
                       </div>
-                      <div>
-                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                          AI Recommendation: <span className={
-                            editedData.trade_recommendation.action === 'BUY'
-                              ? 'text-green-500'
-                              : editedData.trade_recommendation.action === 'SELL'
-                              ? 'text-red-500'
-                              : 'text-yellow-500'
-                          }>{editedData.trade_recommendation.action}</span>
-                        </h3>
-                        <p className="text-gray-500">
-                          Market Bias: <span className={`font-semibold ${
-                            editedData.trade_recommendation.bias === 'bullish' ? 'text-green-500' :
-                            editedData.trade_recommendation.bias === 'bearish' ? 'text-red-500' : 'text-gray-500'
-                          }`}>{editedData.trade_recommendation.bias?.toUpperCase()}</span>
-                          {' '}({editedData.trade_recommendation.bias_strength})
+                      <div className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                        editedData.trade_recommendation.bias === 'bullish'
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                          : editedData.trade_recommendation.bias === 'bearish'
+                          ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+                          : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                      }`}>
+                        {editedData.trade_recommendation.bias?.charAt(0).toUpperCase() + editedData.trade_recommendation.bias?.slice(1)} • {editedData.trade_recommendation.bias_strength}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="px-3 py-1.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-sm font-bold">
+                        R:R {editedData.trade_recommendation.risk_reward_ratio}
+                      </span>
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold ${
+                        editedData.trade_recommendation.trade_quality === 'A+' || editedData.trade_recommendation.trade_quality === 'A'
+                          ? 'bg-emerald-500 text-white'
+                          : editedData.trade_recommendation.trade_quality === 'B'
+                          ? 'bg-blue-500 text-white'
+                          : editedData.trade_recommendation.trade_quality === 'C'
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-rose-500 text-white'
+                      }`}>
+                        {editedData.trade_recommendation.trade_quality}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Price Levels Card */}
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200/50 dark:border-gray-700/50">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Zap className="w-5 h-5 text-amber-500" />
+                      <h4 className="font-semibold text-gray-900 dark:text-white">AI Suggested Levels</h4>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                        <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">ENTRY</p>
+                        <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                          {editedData.trade_recommendation.recommended_entry ? `$${editedData.trade_recommendation.recommended_entry}` : '-'}
+                        </p>
+                      </div>
+                      <div className="text-center p-4 bg-rose-50 dark:bg-rose-900/20 rounded-xl">
+                        <p className="text-xs text-rose-600 dark:text-rose-400 font-medium mb-1">STOP LOSS</p>
+                        <p className="text-xl font-bold text-rose-600 dark:text-rose-400">
+                          {editedData.trade_recommendation.recommended_stop_loss ? `$${editedData.trade_recommendation.recommended_stop_loss}` : '-'}
+                        </p>
+                      </div>
+                      <div className="text-center p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mb-1">TARGET</p>
+                        <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                          {editedData.trade_recommendation.recommended_targets?.[0] ? `$${editedData.trade_recommendation.recommended_targets[0]}` : '-'}
                         </p>
                       </div>
                     </div>
-                    <div className={`px-4 py-2 rounded-xl text-xl font-bold ${
-                      editedData.trade_recommendation.trade_quality === 'A+' || editedData.trade_recommendation.trade_quality === 'A'
-                        ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
-                        : editedData.trade_recommendation.trade_quality === 'B'
-                        ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
-                        : editedData.trade_recommendation.trade_quality === 'C'
-                        ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400'
-                        : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
-                    }`}>
-                      Grade: {editedData.trade_recommendation.trade_quality}
-                    </div>
-                  </div>
-
-                  {/* Recommended Levels */}
-                  <div className="grid grid-cols-3 gap-4 mb-6">
-                    <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4">
-                      <p className="text-sm text-gray-500 mb-1">Recommended Entry</p>
-                      <p className="text-2xl font-bold text-blue-600">${editedData.trade_recommendation.recommended_entry || '-'}</p>
-                    </div>
-                    <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4">
-                      <p className="text-sm text-gray-500 mb-1">Stop Loss</p>
-                      <p className="text-2xl font-bold text-red-500">${editedData.trade_recommendation.recommended_stop_loss || '-'}</p>
-                    </div>
-                    <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4">
-                      <p className="text-sm text-gray-500 mb-1">Take Profit</p>
-                      <p className="text-2xl font-bold text-green-500">
-                        ${editedData.trade_recommendation.recommended_targets?.[0] || '-'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Risk/Reward */}
-                  <div className="flex items-center gap-4 mb-4">
-                    <span className="px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl font-bold">
-                      R:R {editedData.trade_recommendation.risk_reward_ratio}
-                    </span>
                     {editedData.trade_recommendation.recommended_targets?.length > 1 && (
-                      <span className="text-sm text-gray-500">
-                        Targets: {editedData.trade_recommendation.recommended_targets.map(t => `$${t}`).join(' → ')}
-                      </span>
+                      <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
+                        <span>All targets:</span>
+                        {editedData.trade_recommendation.recommended_targets.map((t, i) => (
+                          <span key={i} className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300 font-medium">
+                            ${t}
+                          </span>
+                        ))}
+                      </div>
                     )}
                   </div>
 
-                  {/* Reasoning */}
-                  <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4">
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Analysis:</p>
-                    <p className="text-gray-600 dark:text-gray-400">{editedData.trade_recommendation.reasoning}</p>
-                  </div>
-
                   {/* Key Levels */}
-                  {editedData.key_levels && (
-                    <div className="grid grid-cols-2 gap-4 mt-4">
-                      <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4">
-                        <p className="text-sm font-medium text-red-600 dark:text-red-400 mb-2">Resistance Levels</p>
-                        <div className="flex flex-wrap gap-2">
-                          {editedData.key_levels.resistance?.map((level, i) => (
-                            <span key={i} className="px-3 py-1 bg-red-100 dark:bg-red-800/30 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium">
-                              ${level}
-                            </span>
-                          ))}
-                        </div>
+                  {editedData.key_levels && (editedData.key_levels.resistance?.length > 0 || editedData.key_levels.support?.length > 0) && (
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200/50 dark:border-gray-700/50">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Layers className="w-5 h-5 text-indigo-500" />
+                        <h4 className="font-semibold text-gray-900 dark:text-white">Key Price Levels</h4>
                       </div>
-                      <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4">
-                        <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">Support Levels</p>
-                        <div className="flex flex-wrap gap-2">
-                          {editedData.key_levels.support?.map((level, i) => (
-                            <span key={i} className="px-3 py-1 bg-green-100 dark:bg-green-800/30 text-green-700 dark:text-green-300 rounded-lg text-sm font-medium">
-                              ${level}
-                            </span>
-                          ))}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-rose-500 font-semibold mb-2 uppercase tracking-wide">Resistance</p>
+                          <div className="flex flex-wrap gap-2">
+                            {editedData.key_levels.resistance?.map((level, i) => (
+                              <span key={i} className="px-3 py-1.5 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-lg text-sm font-semibold">
+                                ${level}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-emerald-500 font-semibold mb-2 uppercase tracking-wide">Support</p>
+                          <div className="flex flex-wrap gap-2">
+                            {editedData.key_levels.support?.map((level, i) => (
+                              <span key={i} className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-sm font-semibold">
+                                ${level}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
                   )}
+
+                  {/* Analysis Reasoning */}
+                  <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-5 text-white">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Star className="w-5 h-5" />
+                      <h4 className="font-semibold">AI Analysis</h4>
+                    </div>
+                    <p className="text-white/90 leading-relaxed">{editedData.trade_recommendation.reasoning}</p>
+                  </div>
                 </div>
               )}
 
