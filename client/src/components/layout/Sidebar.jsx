@@ -10,11 +10,9 @@ import {
   Settings,
   LogOut,
   ChevronRight,
-  Activity,
   Globe,
   Target,
   X,
-  BarChart3,
   Bell,
   Users,
   LineChart
@@ -41,7 +39,6 @@ const navGroups = [
   {
     title: 'ANALYTICS',
     items: [
-      { path: '/analytics', icon: Activity, label: 'Overview', gradient: 'from-violet-500 to-purple-500' },
       { path: '/advanced-analytics', icon: LineChart, label: 'Advanced', badge: 'Pro', gradient: 'from-indigo-500 to-purple-500' },
       { path: '/journal', icon: BookOpen, label: 'Journal', gradient: 'from-pink-500 to-rose-500' },
       { path: '/history', icon: History, label: 'Trade History', gradient: 'from-indigo-500 to-blue-500' },
