@@ -10,7 +10,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Sparkles,
-  Zap
+  Zap,
+  BarChart3
 } from 'lucide-react';
 
 export function AnalysisResult({ analysis }) {
@@ -50,12 +51,39 @@ export function AnalysisResult({ analysis }) {
 
   const getRRColor = () => {
     const rr = parseFloat(analysis.riskRewardRatio);
-    if (rr >= 2) return { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400', label: 'Favorable' };
-    if (rr >= 1.5) return { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400', label: 'Acceptable' };
+    if (rr >= 2) return { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400', label: 'Excellent' };
+    if (rr >= 1.5) return { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400', label: 'Good' };
     return { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', label: 'Poor' };
   };
 
   const rrStyle = getRRColor();
+
+  // Calculate price level positions for visual chart
+  const getPriceLevelPositions = () => {
+    const entry = analysis.entry || 0;
+    const sl = analysis.stopLoss || 0;
+    const tp = analysis.takeProfit || 0;
+
+    if (!entry || !sl || !tp) return null;
+
+    const prices = [sl, entry, tp];
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    const range = max - min;
+
+    if (range === 0) return null;
+
+    const getPosition = (price) => ((price - min) / range) * 100;
+
+    return {
+      entry: getPosition(entry),
+      sl: getPosition(sl),
+      tp: getPosition(tp),
+      isBullish: tp > entry
+    };
+  };
+
+  const positions = getPriceLevelPositions();
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -109,113 +137,37 @@ export function AnalysisResult({ analysis }) {
         </div>
       </div>
 
-      {/* Entry, SL, TP Cards */}
-      <div className="grid grid-cols-3 gap-2 md:gap-4">
-        <div className="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-3 md:p-5 shadow-xl shadow-blue-500/20">
-          <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-          <div className="relative">
-            <div className="flex items-center gap-1 md:gap-2 mb-2 md:mb-3">
-              <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                <Target className="w-3 h-3 md:w-4 md:h-4 text-white" />
-              </div>
-              <span className="font-semibold text-white/90 text-xs md:text-base">Entry</span>
-            </div>
-            <p className="text-lg md:text-3xl font-bold text-white">${analysis.entry?.toFixed(4) || '-'}</p>
-            <p className="text-[10px] md:text-sm text-white/60 mt-1 hidden md:block">Suggested entry price</p>
-          </div>
-        </div>
-
-        <div className="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 p-3 md:p-5 shadow-xl shadow-red-500/20">
-          <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-          <div className="relative">
-            <div className="flex items-center gap-1 md:gap-2 mb-2 md:mb-3">
-              <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                <Shield className="w-3 h-3 md:w-4 md:h-4 text-white" />
-              </div>
-              <span className="font-semibold text-white/90 text-xs md:text-base">Stop Loss</span>
-            </div>
-            <p className="text-lg md:text-3xl font-bold text-white">${analysis.stopLoss?.toFixed(4) || '-'}</p>
-            <p className="text-[10px] md:text-sm text-white/60 mt-1 hidden md:block">Risk management level</p>
-          </div>
-        </div>
-
-        <div className="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-3 md:p-5 shadow-xl shadow-emerald-500/20">
-          <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-          <div className="relative">
-            <div className="flex items-center gap-1 md:gap-2 mb-2 md:mb-3">
-              <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                <Award className="w-3 h-3 md:w-4 md:h-4 text-white" />
-              </div>
-              <span className="font-semibold text-white/90 text-xs md:text-base">Take Profit</span>
-            </div>
-            <p className="text-lg md:text-3xl font-bold text-white">${analysis.takeProfit?.toFixed(4) || '-'}</p>
-            <p className="text-[10px] md:text-sm text-white/60 mt-1 hidden md:block">Target profit level</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Risk Reward & Patterns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+      {/* Pattern Analysis & Risk Management Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        {/* Pattern Analysis Section */}
         <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl md:rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-4 md:p-6 shadow-xl shadow-gray-200/20 dark:shadow-none">
           <div className="flex items-center gap-2 mb-4 md:mb-5">
-            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
-              <Zap className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+              <BarChart3 className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </div>
-            <h3 className="font-semibold text-gray-900 dark:text-white text-sm md:text-base">Risk / Reward Ratio</h3>
-          </div>
-
-          <div className="flex items-center justify-between mb-4 md:mb-6">
-            <span className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-              1 : {analysis.riskRewardRatio}
-            </span>
-            <span className={`px-3 md:px-4 py-1 md:py-1.5 rounded-full text-xs md:text-sm font-semibold ${rrStyle.bg} ${rrStyle.text}`}>
-              {rrStyle.label}
-            </span>
-          </div>
-
-          <div className="space-y-3 md:space-y-4">
             <div>
-              <div className="flex justify-between text-xs md:text-sm mb-2">
-                <span className="text-gray-500 dark:text-gray-400 font-medium">Trend Strength</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{analysis.trendStrength}</span>
-              </div>
-              <div className="h-2 md:h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  className={`h-full bg-gradient-to-r ${getStrengthColor()} rounded-full transition-all duration-700 ease-out`}
-                  style={{ width: getStrengthWidth() }}
-                />
-              </div>
-            </div>
-
-            <div className="pt-3 md:pt-4 border-t border-gray-100 dark:border-gray-700">
-              <div className="flex justify-between text-xs md:text-sm mb-2">
-                <span className="text-gray-500 dark:text-gray-400 font-medium">Confidence Score</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{analysis.confidence}%</span>
-              </div>
-              <div className="h-2 md:h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-700 ease-out ${
-                    analysis.confidence >= 70 ? 'bg-gradient-to-r from-emerald-500 to-green-500' :
-                    analysis.confidence >= 50 ? 'bg-gradient-to-r from-amber-500 to-yellow-500' :
-                    'bg-gradient-to-r from-red-500 to-orange-500'
-                  }`}
-                  style={{ width: `${analysis.confidence}%` }}
-                />
-              </div>
+              <h3 className="font-bold text-gray-900 dark:text-white text-base md:text-lg">Pattern Analysis</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">AI detected setup</p>
             </div>
           </div>
-        </div>
 
-        <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl md:rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-4 md:p-6 shadow-xl shadow-gray-200/20 dark:shadow-none">
-          <div className="flex items-center gap-2 mb-4 md:mb-5">
-            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg shadow-pink-500/25">
-              <Layers className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />
+          {/* Large Entry Price Display */}
+          <div className="mb-6 p-4 md:p-5 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200/50 dark:border-blue-800/30">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-blue-600 dark:text-blue-400">Entry Price</span>
+              <div className="flex items-center gap-1.5">
+                <Target className="w-4 h-4 text-blue-500" />
+              </div>
             </div>
-            <h3 className="font-semibold text-gray-900 dark:text-white text-sm md:text-base">Detected Patterns</h3>
+            <p className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400">
+              ${analysis.entry?.toFixed(4) || '—'}
+            </p>
           </div>
 
+          {/* Detected Patterns */}
           {analysis.patterns && analysis.patterns.length > 0 ? (
             <div className="space-y-2 md:space-y-3">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Detected Patterns</p>
               {analysis.patterns.map((pattern, index) => {
                 const isBullish = pattern.toLowerCase().includes('bull') || pattern.toLowerCase().includes('bottom') || pattern.toLowerCase().includes('higher') || pattern.toLowerCase().includes('uptrend');
                 const isBearish = pattern.toLowerCase().includes('bear') || pattern.toLowerCase().includes('top') || pattern.toLowerCase().includes('lower') || pattern.toLowerCase().includes('downtrend') || pattern.toLowerCase().includes('descending');
@@ -257,6 +209,150 @@ export function AnalysisResult({ analysis }) {
               <p className="text-sm">No specific patterns detected</p>
             </div>
           )}
+        </div>
+
+        {/* Risk Management Section */}
+        <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl md:rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-4 md:p-6 shadow-xl shadow-gray-200/20 dark:shadow-none">
+          <div className="flex items-center gap-2 mb-4 md:mb-5">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
+              <Shield className="w-4 h-4 md:w-5 md:h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 dark:text-white text-base md:text-lg">Risk Management</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Price levels & R:R</p>
+            </div>
+          </div>
+
+          {/* Visual Price Level Chart */}
+          {positions && (
+            <div className="mb-6 p-4 md:p-5 rounded-xl bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 border border-gray-200/50 dark:border-gray-700/50">
+              <div className="flex items-stretch gap-4">
+                {/* Vertical price chart */}
+                <div className="relative w-3 flex-shrink-0" style={{ height: '180px' }}>
+                  {/* Background bar */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-b from-emerald-200 via-blue-200 to-red-200 dark:from-emerald-900/50 dark:via-blue-900/50 dark:to-red-900/50" />
+
+                  {/* TP marker */}
+                  <div
+                    className="absolute left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-gray-800 shadow-lg z-10"
+                    style={{ bottom: `${positions.tp}%`, transform: 'translate(-50%, 50%)' }}
+                  />
+
+                  {/* Entry marker */}
+                  <div
+                    className="absolute left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-blue-500 border-2 border-white dark:border-gray-800 shadow-lg z-10"
+                    style={{ bottom: `${positions.entry}%`, transform: 'translate(-50%, 50%)' }}
+                  />
+
+                  {/* SL marker */}
+                  <div
+                    className="absolute left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 border-2 border-white dark:border-gray-800 shadow-lg z-10"
+                    style={{ bottom: `${positions.sl}%`, transform: 'translate(-50%, 50%)' }}
+                  />
+                </div>
+
+                {/* Price labels */}
+                <div className="flex-1 flex flex-col justify-between py-1">
+                  {/* Take Profit */}
+                  <div className={`p-3 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800/50 ${positions.tp === 100 ? '' : 'order-2'}`}
+                       style={{ order: positions.tp === 100 ? 1 : positions.tp === 0 ? 3 : 2 }}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Award className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Take Profit</span>
+                      </div>
+                      <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                        ${analysis.takeProfit?.toFixed(4) || '—'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Entry */}
+                  <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50"
+                       style={{ order: 2 }}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <span className="text-xs font-medium text-blue-600 dark:text-blue-400">Entry</span>
+                      </div>
+                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                        ${analysis.entry?.toFixed(4) || '—'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Stop Loss */}
+                  <div className={`p-3 rounded-xl bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800/50`}
+                       style={{ order: positions.sl === 0 ? 3 : positions.sl === 100 ? 1 : 2 }}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-red-600 dark:text-red-400" />
+                        <span className="text-xs font-medium text-red-600 dark:text-red-400">Stop Loss</span>
+                      </div>
+                      <span className="text-lg font-bold text-red-600 dark:text-red-400">
+                        ${analysis.stopLoss?.toFixed(4) || '—'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* If no positions, show simple cards */}
+          {!positions && (
+            <div className="grid grid-cols-1 gap-3 mb-6">
+              <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200/50 dark:border-emerald-800/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    <span className="font-medium text-emerald-700 dark:text-emerald-400">Take Profit</span>
+                  </div>
+                  <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                    ${analysis.takeProfit?.toFixed(4) || '—'}
+                  </span>
+                </div>
+              </div>
+              <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200/50 dark:border-blue-800/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <span className="font-medium text-blue-700 dark:text-blue-400">Entry</span>
+                  </div>
+                  <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                    ${analysis.entry?.toFixed(4) || '—'}
+                  </span>
+                </div>
+              </div>
+              <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200/50 dark:border-red-800/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-red-600 dark:text-red-400" />
+                    <span className="font-medium text-red-700 dark:text-red-400">Stop Loss</span>
+                  </div>
+                  <span className="text-xl font-bold text-red-600 dark:text-red-400">
+                    ${analysis.stopLoss?.toFixed(4) || '—'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Risk/Reward Ratio */}
+          <div className="p-4 md:p-5 rounded-xl bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 border border-violet-200/50 dark:border-violet-800/30">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                <span className="font-semibold text-violet-700 dark:text-violet-400">Risk : Reward</span>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold ${rrStyle.bg} ${rrStyle.text}`}>
+                {rrStyle.label}
+              </span>
+            </div>
+            <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+              1 : {analysis.riskRewardRatio}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -333,6 +429,48 @@ export function AnalysisResult({ analysis }) {
         </div>
       </div>
 
+      {/* Trend Strength & Confidence */}
+      <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl md:rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-4 md:p-6 shadow-xl shadow-gray-200/20 dark:shadow-none">
+        <div className="flex items-center gap-2 mb-4 md:mb-5">
+          <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/25">
+            <Activity className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />
+          </div>
+          <h3 className="font-semibold text-gray-900 dark:text-white text-sm md:text-base">Signal Strength</h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <div className="flex justify-between text-xs md:text-sm mb-2">
+              <span className="text-gray-500 dark:text-gray-400 font-medium">Trend Strength</span>
+              <span className="font-semibold text-gray-900 dark:text-white">{analysis.trendStrength}</span>
+            </div>
+            <div className="h-3 md:h-4 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className={`h-full bg-gradient-to-r ${getStrengthColor()} rounded-full transition-all duration-700 ease-out`}
+                style={{ width: getStrengthWidth() }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between text-xs md:text-sm mb-2">
+              <span className="text-gray-500 dark:text-gray-400 font-medium">Confidence Score</span>
+              <span className="font-semibold text-gray-900 dark:text-white">{analysis.confidence}%</span>
+            </div>
+            <div className="h-3 md:h-4 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ease-out ${
+                  analysis.confidence >= 70 ? 'bg-gradient-to-r from-emerald-500 to-green-500' :
+                  analysis.confidence >= 50 ? 'bg-gradient-to-r from-amber-500 to-yellow-500' :
+                  'bg-gradient-to-r from-red-500 to-orange-500'
+                }`}
+                style={{ width: `${analysis.confidence}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* AI Reasoning */}
       {analysis.reasoning && (
         <div className="relative overflow-hidden bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl md:rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-4 md:p-6 shadow-xl shadow-gray-200/20 dark:shadow-none">
@@ -346,7 +484,7 @@ export function AnalysisResult({ analysis }) {
               <h3 className="font-semibold text-gray-900 dark:text-white text-sm md:text-base">AI Analysis</h3>
             </div>
 
-            <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm md:text-lg">
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm md:text-base">
               {analysis.reasoning}
             </p>
 
