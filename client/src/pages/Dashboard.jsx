@@ -202,7 +202,7 @@ export function Dashboard() {
                 </div>
 
                 <h1 className="text-4xl font-black text-white mb-3 tracking-tight">
-                  Welcome back, <span className="gradient-text">{user?.username || 'Trader'}</span>
+                  Welcome back, <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">{user?.username || 'Trader'}</span>
                 </h1>
                 <p className="text-lg text-gray-400 max-w-xl mb-6">
                   Your portfolio is performing above market average. Keep the momentum going.
