@@ -407,10 +407,39 @@ If you cannot read the image clearly, set confidence to a low number and explain
     }
 
     if (error.message.includes('ANTHROPIC_API_KEY')) {
-      return res.status(503).json({ error: 'AI service not configured' });
+      return res.status(503).json({ error: 'AI service not configured. Please set ANTHROPIC_API_KEY.' });
     }
 
-    res.status(500).json({ error: error.message || 'Evaluation failed' });
+    // Handle Anthropic API errors
+    if (error.status === 401 || error.message?.includes('authentication') || error.message?.includes('invalid_api_key')) {
+      return res.status(503).json({
+        error: 'Invalid API key. Please check your ANTHROPIC_API_KEY.'
+      });
+    }
+
+    if (error.status === 400 || error.message?.includes('invalid_request')) {
+      return res.status(400).json({
+        error: 'Invalid request to AI service. Please try a different image.'
+      });
+    }
+
+    if (error.status === 429) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded. Please wait a moment and try again.'
+      });
+    }
+
+    // Handle network/connection errors
+    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+      return res.status(503).json({
+        error: 'Unable to connect to AI service. Please check your internet connection.'
+      });
+    }
+
+    res.status(500).json({
+      error: 'Failed to analyze image',
+      details: error.message || 'Unknown error occurred'
+    });
   }
 });
 

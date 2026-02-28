@@ -337,10 +337,13 @@ export function Strategies() {
       setEditMode(true);
     } catch (error) {
       const errorData = error.response?.data;
+      console.error('Evaluation error:', error.response || error);
       if (errorData?.partial_data) {
         alert(`${errorData.error}\n\n${errorData.details}`);
+      } else if (errorData?.details) {
+        alert(`${errorData.error}\n\nDetails: ${errorData.details}`);
       } else {
-        alert(errorData?.error || 'Failed to analyze image');
+        alert(errorData?.error || 'Failed to analyze image. Please try again.');
       }
     } finally {
       setLoading(false);
