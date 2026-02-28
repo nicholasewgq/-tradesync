@@ -12,7 +12,6 @@ import {
   ChevronRight,
   Activity,
   Globe,
-  Brain,
   Target,
   X
 } from 'lucide-react';
@@ -31,7 +30,6 @@ const navGroups = [
     title: 'AI POWERED',
     items: [
       { path: '/strategies', icon: Target, label: 'Strategies', badge: 'New', gradient: 'from-emerald-500 to-teal-500' },
-      { path: '/ai-insights', icon: Brain, label: 'AI Signals', gradient: 'from-purple-500 to-pink-500' },
       { path: '/market', icon: Globe, label: 'Market Intel', gradient: 'from-cyan-500 to-blue-500' },
     ]
   },
