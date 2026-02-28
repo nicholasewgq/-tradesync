@@ -332,7 +332,9 @@ export function Strategies() {
         compliance_score: response.data.analysis.compliance_score || 0,
         improvements: response.data.analysis.improvements || [],
         suggested_tags: response.data.analysis.suggested_tags || [],
-        overall_feedback: response.data.analysis.overall_feedback || ''
+        overall_feedback: response.data.analysis.overall_feedback || '',
+        trade_recommendation: response.data.analysis.trade_recommendation || null,
+        key_levels: response.data.analysis.key_levels || null
       });
       setEditMode(true);
     } catch (error) {
@@ -592,6 +594,128 @@ export function Strategies() {
                   Cancel
                 </button>
               </div>
+
+              {/* AI Trade Recommendation Section */}
+              {editedData.trade_recommendation && (
+                <div className={`rounded-2xl p-6 border-2 ${
+                  editedData.trade_recommendation.action === 'BUY'
+                    ? 'bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500'
+                    : editedData.trade_recommendation.action === 'SELL'
+                    ? 'bg-gradient-to-br from-red-500/10 to-rose-500/10 border-red-500'
+                    : 'bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border-yellow-500'
+                }`}>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+                        editedData.trade_recommendation.action === 'BUY'
+                          ? 'bg-green-500'
+                          : editedData.trade_recommendation.action === 'SELL'
+                          ? 'bg-red-500'
+                          : 'bg-yellow-500'
+                      }`}>
+                        {editedData.trade_recommendation.action === 'BUY' ? (
+                          <TrendingUp className="w-8 h-8 text-white" />
+                        ) : editedData.trade_recommendation.action === 'SELL' ? (
+                          <TrendingDown className="w-8 h-8 text-white" />
+                        ) : (
+                          <AlertTriangle className="w-8 h-8 text-white" />
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                          AI Recommendation: <span className={
+                            editedData.trade_recommendation.action === 'BUY'
+                              ? 'text-green-500'
+                              : editedData.trade_recommendation.action === 'SELL'
+                              ? 'text-red-500'
+                              : 'text-yellow-500'
+                          }>{editedData.trade_recommendation.action}</span>
+                        </h3>
+                        <p className="text-gray-500">
+                          Market Bias: <span className={`font-semibold ${
+                            editedData.trade_recommendation.bias === 'bullish' ? 'text-green-500' :
+                            editedData.trade_recommendation.bias === 'bearish' ? 'text-red-500' : 'text-gray-500'
+                          }`}>{editedData.trade_recommendation.bias?.toUpperCase()}</span>
+                          {' '}({editedData.trade_recommendation.bias_strength})
+                        </p>
+                      </div>
+                    </div>
+                    <div className={`px-4 py-2 rounded-xl text-xl font-bold ${
+                      editedData.trade_recommendation.trade_quality === 'A+' || editedData.trade_recommendation.trade_quality === 'A'
+                        ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
+                        : editedData.trade_recommendation.trade_quality === 'B'
+                        ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                        : editedData.trade_recommendation.trade_quality === 'C'
+                        ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400'
+                        : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                    }`}>
+                      Grade: {editedData.trade_recommendation.trade_quality}
+                    </div>
+                  </div>
+
+                  {/* Recommended Levels */}
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4">
+                      <p className="text-sm text-gray-500 mb-1">Recommended Entry</p>
+                      <p className="text-2xl font-bold text-blue-600">${editedData.trade_recommendation.recommended_entry || '-'}</p>
+                    </div>
+                    <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4">
+                      <p className="text-sm text-gray-500 mb-1">Stop Loss</p>
+                      <p className="text-2xl font-bold text-red-500">${editedData.trade_recommendation.recommended_stop_loss || '-'}</p>
+                    </div>
+                    <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4">
+                      <p className="text-sm text-gray-500 mb-1">Take Profit</p>
+                      <p className="text-2xl font-bold text-green-500">
+                        ${editedData.trade_recommendation.recommended_targets?.[0] || '-'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Risk/Reward */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl font-bold">
+                      R:R {editedData.trade_recommendation.risk_reward_ratio}
+                    </span>
+                    {editedData.trade_recommendation.recommended_targets?.length > 1 && (
+                      <span className="text-sm text-gray-500">
+                        Targets: {editedData.trade_recommendation.recommended_targets.map(t => `$${t}`).join(' → ')}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Reasoning */}
+                  <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Analysis:</p>
+                    <p className="text-gray-600 dark:text-gray-400">{editedData.trade_recommendation.reasoning}</p>
+                  </div>
+
+                  {/* Key Levels */}
+                  {editedData.key_levels && (
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4">
+                        <p className="text-sm font-medium text-red-600 dark:text-red-400 mb-2">Resistance Levels</p>
+                        <div className="flex flex-wrap gap-2">
+                          {editedData.key_levels.resistance?.map((level, i) => (
+                            <span key={i} className="px-3 py-1 bg-red-100 dark:bg-red-800/30 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium">
+                              ${level}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4">
+                        <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">Support Levels</p>
+                        <div className="flex flex-wrap gap-2">
+                          {editedData.key_levels.support?.map((level, i) => (
+                            <span key={i} className="px-3 py-1 bg-green-100 dark:bg-green-800/30 text-green-700 dark:text-green-300 rounded-lg text-sm font-medium">
+                              ${level}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Pattern Analysis Section */}
               <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50">

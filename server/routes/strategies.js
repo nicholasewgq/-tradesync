@@ -295,10 +295,10 @@ router.post('/evaluate', authenticateToken, upload.single('image'), async (req, 
             },
             {
               type: 'text',
-              text: `You are an expert trade analyst. Analyze this trading screenshot and extract all visible trade details.
+              text: `You are an expert trade analyst and trading coach. Analyze this trading screenshot and provide comprehensive trade analysis.
 ${rulesPrompt}
 
-Extract the following information from the image (use null if not visible):
+TASK 1: Extract all visible trade details from the image (use null if not visible):
 - ticker/pair (the trading symbol)
 - direction (long/short)
 - entry price
@@ -309,7 +309,14 @@ Extract the following information from the image (use null if not visible):
 - P&L if visible (in dollars and/or R multiple)
 - any setup notes or annotations visible
 
-${rules.length > 0 ? `Then evaluate the trade against each strategy rule and determine if it passes or fails.` : ''}
+TASK 2: Analyze the chart and provide actionable trading recommendations:
+- Identify the current market bias (bullish/bearish/neutral)
+- Suggest optimal entry zones based on the chart
+- Recommend stop loss placement
+- Suggest take profit targets
+- Assess if this is a good trade setup or not
+
+${rules.length > 0 ? `TASK 3: Evaluate the trade against each strategy rule and determine if it passes or fails.` : ''}
 
 Respond in this exact JSON format:
 {
@@ -326,6 +333,21 @@ Respond in this exact JSON format:
     "setup_notes": "string or null",
     "confidence": number between 0-100 (how confident you are in the extraction)
   },
+  "trade_recommendation": {
+    "bias": "bullish" | "bearish" | "neutral",
+    "bias_strength": "strong" | "moderate" | "weak",
+    "action": "BUY" | "SELL" | "WAIT" | "AVOID",
+    "recommended_entry": number or null,
+    "recommended_stop_loss": number or null,
+    "recommended_targets": [array of numbers] or [],
+    "risk_reward_ratio": "string like 1:2.5",
+    "trade_quality": "A+" | "A" | "B" | "C" | "D" | "F",
+    "reasoning": "detailed explanation of why this trade setup is good or bad"
+  },
+  "key_levels": {
+    "resistance": [array of price levels],
+    "support": [array of price levels]
+  },
   "rule_results": [
     {
       "rule_id": number,
@@ -337,7 +359,7 @@ Respond in this exact JSON format:
   "compliance_score": number between 0-100 (percentage of rules passed),
   "improvements": ["suggestion 1", "suggestion 2"],
   "suggested_tags": ["tag1", "tag2", "tag3"],
-  "overall_feedback": "brief overall assessment of the trade"
+  "overall_feedback": "comprehensive assessment including whether to take this trade, what to watch for, and any warnings"
 }
 
 If you cannot read the image clearly, set confidence to a low number and explain in overall_feedback what you couldn't read.`
