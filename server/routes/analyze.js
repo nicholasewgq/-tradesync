@@ -162,7 +162,10 @@ async function analyzeChartImage(fileBuffer, mimeType, timeframe) {
     ]
   });
 
-  const content = response.content[0].text;
+  let content = response.content[0].text;
+
+  // Clean up the response - remove markdown code blocks if present
+  content = content.replace(/```json\s*/gi, '').replace(/```\s*/g, '');
 
   // Extract JSON from response - find the last complete JSON object
   let jsonStr = null;
@@ -188,13 +191,27 @@ async function analyzeChartImage(fileBuffer, mimeType, timeframe) {
     throw new Error('Failed to parse AI response - no valid JSON found');
   }
 
+  // Clean the JSON string - fix common issues
+  jsonStr = jsonStr
+    .replace(/[\x00-\x1F\x7F]/g, ' ')  // Remove control characters
+    .replace(/,\s*}/g, '}')  // Remove trailing commas
+    .replace(/,\s*]/g, ']'); // Remove trailing commas in arrays
+
   let analysis;
   try {
     analysis = JSON.parse(jsonStr);
   } catch (parseError) {
     console.error('JSON parse error:', parseError.message);
     console.error('Attempted to parse:', jsonStr);
-    throw new Error('Failed to parse AI response - invalid JSON format');
+
+    // Try to fix common JSON issues and retry
+    try {
+      // Replace single quotes with double quotes
+      const fixedJson = jsonStr.replace(/'/g, '"');
+      analysis = JSON.parse(fixedJson);
+    } catch (retryError) {
+      throw new Error('Failed to parse AI response - invalid JSON format');
+    }
   }
 
   // Ensure all required fields exist
