@@ -139,7 +139,7 @@ async function analyzeChartImage(fileBuffer, mimeType, timeframe) {
   console.log(`Base64 encoded, length: ${base64Image.length} chars`);
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-opus-4-20250514',
     max_tokens: 4096,
     messages: [
       {
@@ -270,7 +270,7 @@ ${candles.slice(-10).map((c, i) => `${i + 1}. O:${c.open} H:${c.high} L:${c.low}
 `;
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-20250514',
       max_tokens: 300,
       system: 'You are an expert technical analyst. Provide trading insights based on the technical data provided. Be concise and actionable.',
       messages: [
