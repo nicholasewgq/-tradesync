@@ -201,10 +201,10 @@ export function Dashboard() {
                   </div>
                 </div>
 
-                <h1 className="text-4xl font-black text-white mb-3 tracking-tight">
+                <h1 className="text-2xl font-bold text-white mb-2 tracking-tight">
                   Welcome back, <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">{user?.username || 'Trader'}</span>
                 </h1>
-                <p className="text-lg text-gray-400 max-w-xl mb-6">
+                <p className="text-sm text-gray-400 max-w-xl mb-5">
                   Your portfolio is performing above market average. Keep the momentum going.
                 </p>
 
@@ -347,7 +347,7 @@ export function Dashboard() {
                     </div>
                   </div>
 
-                  <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-lg">Swing Trading</h3>
+                  <h3 className="text-lg font-bold text-white mb-2 drop-shadow-lg">Swing Trading</h3>
                   <p className="text-gray-300 text-sm mb-6">Multi-day positions with AI-optimized entries</p>
 
                   <div className="flex items-center justify-between">
@@ -390,7 +390,7 @@ export function Dashboard() {
                     </div>
                   </div>
 
-                  <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-lg">Scalp Trading</h3>
+                  <h3 className="text-lg font-bold text-white mb-2 drop-shadow-lg">Scalp Trading</h3>
                   <p className="text-gray-300 text-sm mb-6">Rapid execution with real-time AI signals</p>
 
                   <div className="flex items-center justify-between">
@@ -429,7 +429,7 @@ export function Dashboard() {
                   <MiniSparkline color="#8B5CF6" height={80} data={[30, 45, 35, 55, 40, 60, 50, 70, 65, 80, 75, 90]} />
                 </div>
 
-                <h3 className="text-xl font-bold text-white mb-1 drop-shadow-lg">Analytics</h3>
+                <h3 className="text-base font-bold text-white mb-1 drop-shadow-lg">Analytics</h3>
                 <p className="text-gray-300 text-sm mb-4">Deep performance insights</p>
 
                 <div className="flex items-center text-violet-400 font-semibold group-hover:gap-3 gap-2 transition-all">
@@ -465,7 +465,7 @@ export function Dashboard() {
                   </div>
                 </div>
 
-                <h3 className="text-xl font-bold text-white mb-1 drop-shadow-lg">Trade Journal</h3>
+                <h3 className="text-base font-bold text-white mb-1 drop-shadow-lg">Trade Journal</h3>
                 <p className="text-gray-300 text-sm mb-4">Log and review trades</p>
 
                 <div className="flex items-center text-pink-400 font-semibold group-hover:gap-3 gap-2 transition-all">

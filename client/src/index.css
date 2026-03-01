@@ -58,12 +58,12 @@
 
   /* Premium Stats Number */
   .stat-number {
-    @apply text-5xl font-black tracking-tight;
-    letter-spacing: -0.03em;
+    @apply text-3xl font-bold tracking-tight;
+    letter-spacing: -0.02em;
   }
 
   .stat-number-profit {
-    @apply text-5xl font-black tracking-tight;
+    @apply text-3xl font-bold tracking-tight;
     background: linear-gradient(135deg, #00FF9C 0%, #00D68F 50%, #10B981 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -72,7 +72,7 @@
   }
 
   .stat-number-loss {
-    @apply text-5xl font-black tracking-tight;
+    @apply text-3xl font-bold tracking-tight;
     background: linear-gradient(135deg, #FF4D6D 0%, #F43F5E 50%, #E11D48 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
