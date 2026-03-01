@@ -16,6 +16,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { AnalysisResult } from '../components/analysis/AnalysisResult';
+import { TradingViewAdvancedChart } from '../components/TradingViewChart';
 
 // Mini Equity Chart Component
 const MiniEquityChart = () => {
@@ -538,6 +539,24 @@ export function SwingTrading() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* TradingView Chart */}
+        <div className="mt-8 glass-card p-0 overflow-hidden">
+          <div className="p-4 border-b border-white/10 flex items-center justify-between">
+            <h3 className="text-base font-semibold text-white flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-emerald-400" />
+              Live Chart - Swing Analysis
+            </h3>
+            <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              Daily
+            </span>
+          </div>
+          <TradingViewAdvancedChart
+            symbol="NASDAQ:SPY"
+            theme="dark"
+            height={450}
+          />
         </div>
 
         {/* Analysis Results */}

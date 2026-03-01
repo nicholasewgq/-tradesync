@@ -23,6 +23,7 @@ import {
   Brain
 } from 'lucide-react';
 import { api } from '../utils/api';
+import { TradingViewAdvancedChart, TradingViewMarketOverview } from '../components/TradingViewChart';
 
 const DEFAULT_WATCHLIST = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'SPY', 'QQQ', 'NVDA'];
 
@@ -485,6 +486,24 @@ export function Market() {
               </div>
             </div>
           )}
+
+          {/* TradingView Chart */}
+          <div className="glass-card p-0 overflow-hidden mb-6">
+            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-white flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-cyan-400" />
+                {selectedSymbol} Live Chart
+              </h3>
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+                Real-time
+              </span>
+            </div>
+            <TradingViewAdvancedChart
+              symbol={`NASDAQ:${selectedSymbol}`}
+              theme="dark"
+              height={400}
+            />
+          </div>
 
           {/* News Section - 2 Column Glass Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
