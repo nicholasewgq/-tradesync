@@ -117,7 +117,7 @@ ONLY signal if R:R >= 2.0
 - B: Pattern + 2 confirmations = 65-79% confidence
 - C/D: Weak or no pattern = WAIT
 
-Be precise. Read the chart. Only signal A or B grade setups.`;
+CRITICAL: Return ONLY the JSON object. No explanation before or after. No markdown. Just the raw JSON starting with { and ending with }.`;
 
 // Analyze chart image using Claude Vision
 async function analyzeChartImage(fileBuffer, mimeType, timeframe) {
@@ -206,11 +206,34 @@ async function analyzeChartImage(fileBuffer, mimeType, timeframe) {
 
     // Try to fix common JSON issues and retry
     try {
-      // Replace single quotes with double quotes
-      const fixedJson = jsonStr.replace(/'/g, '"');
+      // Replace single quotes with double quotes and fix newlines
+      const fixedJson = jsonStr
+        .replace(/'/g, '"')
+        .replace(/\n/g, ' ')
+        .replace(/\r/g, '')
+        .replace(/\t/g, ' ');
       analysis = JSON.parse(fixedJson);
     } catch (retryError) {
-      throw new Error('Failed to parse AI response - invalid JSON format');
+      // Return a default "WAIT" response instead of failing
+      console.error('All JSON parsing attempts failed, returning default response');
+      analysis = {
+        bias: 'Neutral',
+        setupGrade: 'D',
+        confluenceScore: 0,
+        confluenceFactors: [],
+        trendStrength: 'Weak',
+        priceStructure: 'Choppy',
+        support: [],
+        resistance: [],
+        patterns: [],
+        entry: 0,
+        stopLoss: 0,
+        takeProfit: 0,
+        riskRewardRatio: '0.00',
+        confidence: 20,
+        recommendation: 'WAIT',
+        reasoning: 'Unable to analyze chart clearly. Please try with a cleaner chart image.'
+      };
     }
   }
 
