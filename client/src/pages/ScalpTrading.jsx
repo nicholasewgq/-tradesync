@@ -19,7 +19,6 @@ import {
   Shield
 } from 'lucide-react';
 import { AnalysisResult } from '../components/analysis/AnalysisResult';
-import { TradingViewAdvancedChart } from '../components/TradingViewChart';
 
 // Volatility Indicator Component
 const VolatilityIndicator = ({ level = 65 }) => {
@@ -577,24 +576,6 @@ export function ScalpTrading() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* TradingView Chart */}
-        <div className="mt-8 glass-card p-0 overflow-hidden">
-          <div className="p-4 border-b border-white/10 flex items-center justify-between">
-            <h3 className="text-base font-semibold text-white flex items-center gap-2">
-              <Activity className="w-4 h-4 text-orange-400" />
-              Live Chart - Scalping View
-            </h3>
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400 border border-orange-500/30">
-              1-5 Min
-            </span>
-          </div>
-          <TradingViewAdvancedChart
-            symbol="NASDAQ:QQQ"
-            theme="dark"
-            height={450}
-          />
         </div>
 
         {/* Analysis Results */}
