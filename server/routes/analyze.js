@@ -12,22 +12,9 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
-// Configure multer for image uploads
-const uploadDir = path.join(__dirname, '..', 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'chart-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Configure multer for image uploads - use memory storage for Railway compatibility
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
@@ -117,37 +104,23 @@ IMPORTANT:
 - Be brutally honest about setup quality - most charts should return WAIT`;
 
 // Analyze chart image using Claude Vision
-async function analyzeChartImage(imagePath, timeframe) {
+async function analyzeChartImage(fileBuffer, mimeType, timeframe) {
   const anthropic = getAnthropicClient();
 
-  // Validate file exists and has content
-  if (!fs.existsSync(imagePath)) {
-    throw new Error(`Image file not found: ${imagePath}`);
+  // Validate buffer has content
+  if (!fileBuffer || fileBuffer.length === 0) {
+    throw new Error('Image buffer is empty');
   }
 
-  const stats = fs.statSync(imagePath);
-  if (stats.size === 0) {
-    throw new Error('Image file is empty (0 bytes)');
-  }
+  console.log(`Processing image buffer, size: ${fileBuffer.length} bytes, type: ${mimeType}`);
 
-  console.log(`Reading image: ${imagePath}, size: ${stats.size} bytes`);
-
-  const imageBuffer = fs.readFileSync(imagePath);
-  const base64Image = imageBuffer.toString('base64');
+  const base64Image = fileBuffer.toString('base64');
 
   if (!base64Image || base64Image.length === 0) {
     throw new Error('Failed to encode image to base64');
   }
 
   console.log(`Base64 encoded, length: ${base64Image.length} chars`);
-
-  // Properly detect mime type
-  const ext = path.extname(imagePath).toLowerCase();
-  let mimeType = 'image/jpeg';
-  if (ext === '.png') mimeType = 'image/png';
-  else if (ext === '.webp') mimeType = 'image/webp';
-  else if (ext === '.gif') mimeType = 'image/gif';
-  else if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
 
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
@@ -377,13 +350,9 @@ router.post('/', authenticateToken, upload.single('chart'), async (req, res) => 
     let analysis;
 
     if (req.file) {
-      // Image analysis
-      try {
-        analysis = await analyzeChartImage(req.file.path, timeframe);
-      } finally {
-        // Clean up uploaded file
-        fs.unlink(req.file.path, () => {});
-      }
+      // Image analysis - using memory storage, file data is in req.file.buffer
+      const mimeType = req.file.mimetype || 'image/jpeg';
+      analysis = await analyzeChartImage(req.file.buffer, mimeType, timeframe);
     } else if (ohlcData) {
       // OHLC data analysis
       let candles;
