@@ -36,67 +36,88 @@ function getAnthropicClient() {
 }
 
 // Vision analysis prompt - PRECISION TRADING ANALYSIS
-const VISION_ANALYSIS_PROMPT = `You are a professional trader analyzing charts. Be PRECISE and ACCURATE.
+const VISION_ANALYSIS_PROMPT = `You are an expert chart analyst. Your job is to READ THE CHART PRECISELY and identify HIGH-PROBABILITY patterns.
 
-## STEP 1: READ THE CHART CAREFULLY
-- What is the current price shown?
-- What timeframe is displayed?
-- What indicators are visible (EMAs, RSI, MACD, Bollinger Bands, etc.)?
-- Read the ACTUAL indicator values from the chart
+## STEP 1: EXTRACT EXACT DATA FROM CHART
+You MUST read these values directly from the chart image:
+- Current price (look at last candle close or price label)
+- RSI value (read the exact number, e.g., "RSI: 34.5")
+- MACD histogram (positive/negative, crossing?)
+- Moving average positions (is price above or below each MA?)
+- Volume (higher or lower than average?)
+- Recent high price (resistance)
+- Recent low price (support)
 
-## STEP 2: DETERMINE TREND
-Look at price structure:
-- UPTREND: Higher highs AND higher lows, price above major MAs
-- DOWNTREND: Lower highs AND lower lows, price below major MAs
-- SIDEWAYS: No clear direction, price oscillating in range
+DO NOT GUESS. Read the actual numbers shown on the chart.
 
-## STEP 3: FIND KEY LEVELS (read from chart)
-- Support: Recent swing lows, areas where price bounced UP
-- Resistance: Recent swing highs, areas where price rejected DOWN
-- Round numbers (1.1800, 1.1900, etc.)
+## STEP 2: PATTERN RECOGNITION - HIGH WIN RATE PATTERNS ONLY
+Only signal these proven patterns with 70%+ historical win rates:
 
-## STEP 4: CHECK INDICATORS
-- RSI: Below 30 = oversold (look for longs), Above 70 = overbought (look for shorts), 40-60 = neutral
-- MACD: Histogram positive = bullish momentum, negative = bearish
-- Moving Averages: Price above = bullish, below = bearish
+**BULLISH PATTERNS (LONG signals):**
+- Bull Flag: Strong up move, tight consolidation, continuation up
+- Double Bottom: Two equal lows with neckline break (W pattern)
+- Inverse Head & Shoulders: Three lows, middle lowest, neckline break
+- Ascending Triangle: Higher lows, flat resistance, breakout
+- Morning Star: Down candle, small body, strong up candle
+- Bullish Engulfing: Down candle fully covered by larger up candle
+- Support Bounce: Price touches support + RSI oversold (<30) + bullish candle
 
-## STEP 5: IDENTIFY PATTERNS
-Look for: Double top/bottom, head & shoulders, triangles, flags, channels, trendlines
+**BEARISH PATTERNS (SHORT signals):**
+- Bear Flag: Strong down move, tight consolidation, continuation down
+- Double Top: Two equal highs with neckline break (M pattern)
+- Head & Shoulders: Three highs, middle highest, neckline break
+- Descending Triangle: Lower highs, flat support, breakdown
+- Evening Star: Up candle, small body, strong down candle
+- Bearish Engulfing: Up candle fully covered by larger down candle
+- Resistance Rejection: Price touches resistance + RSI overbought (>70) + bearish candle
 
-## STEP 6: CALCULATE ENTRY/STOP/TARGET
-- LONG entry: At support or breakout above resistance
-- SHORT entry: At resistance or breakdown below support
-- Stop loss: Below support for longs, above resistance for shorts
-- Take profit: Next resistance for longs, next support for shorts
-- R:R = (Target - Entry) / (Entry - Stop)
+**NO TRADE - Say WAIT if you see:**
+- Doji/spinning tops (indecision)
+- Inside bars with no breakout
+- Choppy price action with no pattern
+- Price in middle of range
+- Conflicting signals
 
-## OUTPUT FORMAT (JSON):
+## STEP 3: ENTRY/STOP/TARGET CALCULATION
+For LONG:
+- Entry = Pattern completion point or support level
+- Stop = Below the pattern low (add small buffer)
+- Target = Next resistance OR measured move (pattern height added to breakout)
+
+For SHORT:
+- Entry = Pattern completion point or resistance level
+- Stop = Above the pattern high (add small buffer)
+- Target = Next support OR measured move (pattern height subtracted from breakdown)
+
+Calculate R:R = |Target - Entry| / |Entry - Stop|
+ONLY signal if R:R >= 2.0
+
+## OUTPUT (JSON):
 {
   "bias": "Bullish" | "Bearish" | "Neutral",
   "setupGrade": "A" | "B" | "C" | "D",
   "confluenceScore": 0-10,
-  "confluenceFactors": ["specific factors from the chart"],
+  "confluenceFactors": ["list what confirms: trend, pattern, indicator, level"],
   "trendStrength": "Weak" | "Moderate" | "Strong",
   "priceStructure": "Clean" | "Choppy" | "Ranging",
-  "support": [exact price levels from chart],
-  "resistance": [exact price levels from chart],
-  "patterns": ["patterns you see"],
-  "entry": exact entry price,
-  "stopLoss": exact stop price,
-  "takeProfit": exact target price,
+  "support": [exact prices read from chart],
+  "resistance": [exact prices read from chart],
+  "patterns": ["exact pattern name from list above"],
+  "entry": number,
+  "stopLoss": number,
+  "takeProfit": number,
   "riskRewardRatio": "X.XX",
   "confidence": 0-100,
   "recommendation": "LONG" | "SHORT" | "WAIT",
-  "reasoning": "Specific explanation referencing what you see on the chart"
+  "reasoning": "I see [pattern] at [price]. RSI is [value]. Price is [above/below] the [MA]. Entry at [X], stop at [Y], target at [Z]."
 }
 
-## GRADING:
-- A (80-100% conf): Strong trend + indicator confirmation + at key level + pattern
-- B (65-79% conf): Clear trend + 2 confirmations
-- C (50-64% conf): Weak setup, mixed signals
-- D (below 50%): No clear setup, choppy, conflicting signals
+## GRADES:
+- A: Clear pattern + trend + indicator confirm + key level = 80%+ confidence
+- B: Pattern + 2 confirmations = 65-79% confidence
+- C/D: Weak or no pattern = WAIT
 
-Give LONG/SHORT for A or B grades. Give WAIT for C or D. Be specific with price levels!`;
+Be precise. Read the chart. Only signal A or B grade setups.`;
 
 // Analyze chart image using Claude Vision
 async function analyzeChartImage(fileBuffer, mimeType, timeframe) {
