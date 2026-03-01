@@ -35,52 +35,68 @@ function getAnthropicClient() {
   return new Anthropic({ apiKey });
 }
 
-// Vision analysis prompt - HIGH WIN RATE FILTER
-const VISION_ANALYSIS_PROMPT = `You are an elite technical analyst. Your job is to find ONLY the highest probability setups that have 80%+ historical win rates.
+// Vision analysis prompt - PRECISION TRADING ANALYSIS
+const VISION_ANALYSIS_PROMPT = `You are a professional trader analyzing charts. Be PRECISE and ACCURATE.
 
-## STRICT ENTRY CRITERIA - ALL MUST BE MET FOR A SIGNAL:
-1. Clear trend direction (price making higher highs/lows OR lower highs/lows)
-2. Price respecting key moving average (bouncing off or breaking through with momentum)
-3. RSI/MACD confirming the move (not diverging against price)
-4. Clean price structure (NOT choppy, ranging, or consolidating)
-5. Clear entry at support/resistance with tight stop loss
-6. Minimum 2:1 reward-to-risk ratio
+## STEP 1: READ THE CHART CAREFULLY
+- What is the current price shown?
+- What timeframe is displayed?
+- What indicators are visible (EMAs, RSI, MACD, Bollinger Bands, etc.)?
+- Read the ACTUAL indicator values from the chart
 
-## AUTOMATIC WAIT CONDITIONS:
-- Price is choppy or ranging sideways
-- Mixed signals (bullish price but bearish indicators)
-- No clear support/resistance for stop placement
-- Middle of a range (not at key level)
-- Overextended move (RSI >75 for longs, <25 for shorts)
-- Low volume or unclear candles
+## STEP 2: DETERMINE TREND
+Look at price structure:
+- UPTREND: Higher highs AND higher lows, price above major MAs
+- DOWNTREND: Lower highs AND lower lows, price below major MAs
+- SIDEWAYS: No clear direction, price oscillating in range
 
-## SETUP QUALITY GRADES
-- A Grade: 5+ factors aligned, clear trend, perfect entry = SIGNAL (80%+ confidence)
-- B Grade: 4 factors aligned, good setup = SIGNAL (70-79% confidence)
-- C Grade: 3 factors, decent but risky = WAIT (be patient)
-- D Grade: Less than 3 factors = WAIT (no trade)
+## STEP 3: FIND KEY LEVELS (read from chart)
+- Support: Recent swing lows, areas where price bounced UP
+- Resistance: Recent swing highs, areas where price rejected DOWN
+- Round numbers (1.1800, 1.1900, etc.)
 
-Provide your analysis in this exact JSON format:
+## STEP 4: CHECK INDICATORS
+- RSI: Below 30 = oversold (look for longs), Above 70 = overbought (look for shorts), 40-60 = neutral
+- MACD: Histogram positive = bullish momentum, negative = bearish
+- Moving Averages: Price above = bullish, below = bearish
+
+## STEP 5: IDENTIFY PATTERNS
+Look for: Double top/bottom, head & shoulders, triangles, flags, channels, trendlines
+
+## STEP 6: CALCULATE ENTRY/STOP/TARGET
+- LONG entry: At support or breakout above resistance
+- SHORT entry: At resistance or breakdown below support
+- Stop loss: Below support for longs, above resistance for shorts
+- Take profit: Next resistance for longs, next support for shorts
+- R:R = (Target - Entry) / (Entry - Stop)
+
+## OUTPUT FORMAT (JSON):
 {
   "bias": "Bullish" | "Bearish" | "Neutral",
   "setupGrade": "A" | "B" | "C" | "D",
-  "confluenceScore": number (0-10),
-  "confluenceFactors": ["list each confirming factor"],
+  "confluenceScore": 0-10,
+  "confluenceFactors": ["specific factors from the chart"],
   "trendStrength": "Weak" | "Moderate" | "Strong",
   "priceStructure": "Clean" | "Choppy" | "Ranging",
-  "support": [price levels],
-  "resistance": [price levels],
-  "patterns": [pattern names],
-  "entry": entry price (0 if WAIT),
-  "stopLoss": stop loss price (0 if WAIT),
-  "takeProfit": take profit price (0 if WAIT),
-  "riskRewardRatio": "X.XX" string,
-  "confidence": number 0-100,
+  "support": [exact price levels from chart],
+  "resistance": [exact price levels from chart],
+  "patterns": ["patterns you see"],
+  "entry": exact entry price,
+  "stopLoss": exact stop price,
+  "takeProfit": exact target price,
+  "riskRewardRatio": "X.XX",
+  "confidence": 0-100,
   "recommendation": "LONG" | "SHORT" | "WAIT",
-  "reasoning": "Why this is or isn't a high-probability setup"
+  "reasoning": "Specific explanation referencing what you see on the chart"
 }
 
-CRITICAL: Only give LONG/SHORT for A or B grade setups. Your signals should win 80% of the time - if unsure, output WAIT. Patience beats overtrading.`;
+## GRADING:
+- A (80-100% conf): Strong trend + indicator confirmation + at key level + pattern
+- B (65-79% conf): Clear trend + 2 confirmations
+- C (50-64% conf): Weak setup, mixed signals
+- D (below 50%): No clear setup, choppy, conflicting signals
+
+Give LONG/SHORT for A or B grades. Give WAIT for C or D. Be specific with price levels!`;
 
 // Analyze chart image using Claude Vision
 async function analyzeChartImage(fileBuffer, mimeType, timeframe) {
