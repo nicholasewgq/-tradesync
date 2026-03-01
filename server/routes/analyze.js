@@ -35,62 +35,52 @@ function getAnthropicClient() {
   return new Anthropic({ apiKey });
 }
 
-// Vision analysis prompt - BALANCED ACCURACY
-const VISION_ANALYSIS_PROMPT = `You are an expert technical analyst. Analyze the chart and provide actionable trading signals.
+// Vision analysis prompt - HIGH WIN RATE FILTER
+const VISION_ANALYSIS_PROMPT = `You are an elite technical analyst. Your job is to find ONLY the highest probability setups that have 80%+ historical win rates.
 
-## CONFLUENCE SCORING SYSTEM
-Score each factor present in the chart:
-- Price above/below EMA200 (or major MA): 2 points
-- Price above/below EMA50 (or medium MA): 2 points
-- Price above/below EMA20 (or short MA): 1 point
-- RSI showing direction (>50 bullish, <50 bearish): 2 points
-- MACD/momentum confirming: 2 points
-- Volume above average: 1 point
-- Chart pattern visible: 2 points
-- Clear trend structure: 2 points
+## STRICT ENTRY CRITERIA - ALL MUST BE MET FOR A SIGNAL:
+1. Clear trend direction (price making higher highs/lows OR lower highs/lows)
+2. Price respecting key moving average (bouncing off or breaking through with momentum)
+3. RSI/MACD confirming the move (not diverging against price)
+4. Clean price structure (NOT choppy, ranging, or consolidating)
+5. Clear entry at support/resistance with tight stop loss
+6. Minimum 2:1 reward-to-risk ratio
 
-TOTAL POSSIBLE: 14 points
+## AUTOMATIC WAIT CONDITIONS:
+- Price is choppy or ranging sideways
+- Mixed signals (bullish price but bearish indicators)
+- No clear support/resistance for stop placement
+- Middle of a range (not at key level)
+- Overextended move (RSI >75 for longs, <25 for shorts)
+- Low volume or unclear candles
 
 ## SETUP QUALITY GRADES
-- A Grade (10+ points): Strong setup - HIGH confidence signal
-- B Grade (7-9 points): Decent setup - MEDIUM confidence signal
-- C Grade (5-6 points): Marginal setup - LOW confidence signal
-- D Grade (<5 points): No clear setup - WAIT
-
-## REQUIREMENTS FOR SIGNAL:
-Provide a Bullish or Bearish bias if you see ANY of these:
-1. Price clearly trending in one direction
-2. At least 2 indicators confirming same direction
-3. Clear support/resistance level being tested
-4. Recognizable chart pattern
-
-Only output "Neutral" if the chart is truly sideways/ranging with no directional bias.
+- A Grade: 5+ factors aligned, clear trend, perfect entry = SIGNAL (80%+ confidence)
+- B Grade: 4 factors aligned, good setup = SIGNAL (70-79% confidence)
+- C Grade: 3 factors, decent but risky = WAIT (be patient)
+- D Grade: Less than 3 factors = WAIT (no trade)
 
 Provide your analysis in this exact JSON format:
 {
   "bias": "Bullish" | "Bearish" | "Neutral",
   "setupGrade": "A" | "B" | "C" | "D",
-  "confluenceScore": number (0-14),
-  "confluenceFactors": ["list each factor you counted"],
+  "confluenceScore": number (0-10),
+  "confluenceFactors": ["list each confirming factor"],
   "trendStrength": "Weak" | "Moderate" | "Strong",
   "priceStructure": "Clean" | "Choppy" | "Ranging",
-  "support": [price levels as numbers],
-  "resistance": [price levels as numbers],
+  "support": [price levels],
+  "resistance": [price levels],
   "patterns": [pattern names],
-  "entry": suggested entry price,
-  "stopLoss": suggested stop loss,
-  "takeProfit": suggested take profit,
-  "riskRewardRatio": "X.XX" as string,
-  "confidence": number 0-100 (A=75-100, B=55-74, C=35-54, D=0-34),
+  "entry": entry price (0 if WAIT),
+  "stopLoss": stop loss price (0 if WAIT),
+  "takeProfit": take profit price (0 if WAIT),
+  "riskRewardRatio": "X.XX" string,
+  "confidence": number 0-100,
   "recommendation": "LONG" | "SHORT" | "WAIT",
-  "reasoning": "Brief explanation of the setup"
+  "reasoning": "Why this is or isn't a high-probability setup"
 }
 
-IMPORTANT:
-- Give LONG/SHORT signals for A, B, or C grade setups
-- Only output WAIT for D grade (truly unclear charts)
-- Always suggest entry/stop/TP levels when giving a signal
-- R:R of 1.5+ is acceptable for a trade`;
+CRITICAL: Only give LONG/SHORT for A or B grade setups. Your signals should win 80% of the time - if unsure, output WAIT. Patience beats overtrading.`;
 
 // Analyze chart image using Claude Vision
 async function analyzeChartImage(fileBuffer, mimeType, timeframe) {
@@ -171,24 +161,25 @@ async function analyzeChartImage(fileBuffer, mimeType, timeframe) {
   }
 
   // Ensure all required fields exist
-  // Validate setup grade - A, B, C grades get signals, D grade gets WAIT
+  // Validate setup grade - ONLY A and B grades get signals for high win rate
   const setupGrade = analysis.setupGrade || 'D';
-  const isTradeableSetup = setupGrade === 'A' || setupGrade === 'B' || setupGrade === 'C';
+  const isTradeableSetup = setupGrade === 'A' || setupGrade === 'B';
 
-  // Keep the AI's bias unless it's a D grade
   let finalBias = analysis.bias || 'Neutral';
   let finalRecommendation = analysis.recommendation || 'WAIT';
 
+  // Force WAIT for C and D grades
   if (!isTradeableSetup) {
     finalBias = 'Neutral';
     finalRecommendation = 'WAIT';
   }
 
-  // R:R of 1.5+ is acceptable
+  // Require 2:1 R:R minimum for high win rate
   const rr = parseFloat(analysis.riskRewardRatio) || 0;
-  if (rr < 1.5 && rr > 0 && finalRecommendation !== 'WAIT') {
-    // Low R:R but still give signal with warning
-    analysis.reasoning = (analysis.reasoning || '') + ' (Note: R:R below 1.5 - consider adjusting targets)';
+  if (rr < 2.0 && finalRecommendation !== 'WAIT') {
+    finalRecommendation = 'WAIT';
+    finalBias = 'Neutral';
+    analysis.reasoning = (analysis.reasoning || '') + ' (R:R below 2:1 - waiting for better entry)';
   }
 
   return {
