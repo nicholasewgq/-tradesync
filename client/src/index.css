@@ -303,31 +303,3 @@
 *:focus-visible {
   @apply outline-none ring-2 ring-indigo-500/50 ring-offset-2 ring-offset-[#0B0F19];
 }
-
-/* Shimmer Animation */
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-/* Range Slider Thumb - Orange (Scalp Trading) */
-.range-slider-orange::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  background: linear-gradient(135deg, #F97316, #FBBF24);
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 0 15px rgba(249, 115, 22, 0.6);
-}
-
-/* Range Slider Thumb - Green (Swing Trading) */
-.range-slider-green::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
-  background: linear-gradient(135deg, #10B981, #059669);
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
-}

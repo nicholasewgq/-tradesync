@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
-import { TradingViewTicker, TradingViewAdvancedChart, TradingViewMarketOverview } from '../components/TradingViewChart';
 
 // Mini Sparkline Component
 const MiniSparkline = ({ data, color = '#6366F1', height = 32 }) => {
@@ -614,45 +613,12 @@ export function Dashboard() {
         </div>
       </div>
 
-        {/* LIVE CHARTS SECTION */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Chart */}
-          <div className="lg:col-span-2 glass-card p-0 overflow-hidden">
-            <div className="p-4 border-b border-white/10">
-              <h3 className="text-base font-semibold text-white flex items-center gap-2">
-                <LineChart className="w-4 h-4 text-indigo-400" />
-                Live Chart
-              </h3>
-            </div>
-            <TradingViewAdvancedChart
-              symbol="NASDAQ:SPY"
-              theme="dark"
-              height={400}
-            />
-          </div>
-
-          {/* Market Overview */}
-          <div className="glass-card p-0 overflow-hidden">
-            <div className="p-4 border-b border-white/10">
-              <h3 className="text-base font-semibold text-white flex items-center gap-2">
-                <Activity className="w-4 h-4 text-emerald-400" />
-                Markets
-              </h3>
-            </div>
-            <TradingViewMarketOverview
-              theme="dark"
-              height={400}
-              showChart={true}
-            />
-          </div>
-        </div>
-
-        {/* Ticker Tape */}
-        <div className="glass-card p-2 overflow-hidden">
-          <TradingViewTicker theme="dark" />
-        </div>
-      </div>
-
+      <style>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
     </div>
   );
 }
