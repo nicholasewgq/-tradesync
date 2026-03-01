@@ -567,7 +567,7 @@ export function SwingTrading() {
         )}
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(100%); }
@@ -581,7 +581,7 @@ export function SwingTrading() {
           cursor: pointer;
           box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
         }
-      `}</style>
+      ` }} />
     </div>
   );
 }

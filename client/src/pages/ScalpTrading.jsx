@@ -605,7 +605,7 @@ export function ScalpTrading() {
         )}
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         input[type="range"]::-webkit-slider-thumb {
           -webkit-appearance: none;
           width: 18px;
@@ -615,7 +615,7 @@ export function ScalpTrading() {
           cursor: pointer;
           box-shadow: 0 0 15px rgba(249, 115, 22, 0.6);
         }
-      `}</style>
+      ` }} />
     </div>
   );
 }
