@@ -167,6 +167,246 @@ const PRESET_STRATEGIES = [
       { name: 'Partial Profit Taking', description: 'Take partials at 1:1 and 1:2 R:R' },
       { name: 'Fundamental Alignment', description: 'Check news/fundamentals support the direction' }
     ]
+  },
+  {
+    id: 'vwap',
+    name: 'VWAP Trading',
+    description: 'Trade using Volume Weighted Average Price as dynamic support/resistance.',
+    icon: '📉',
+    color: 'from-violet-500 to-purple-600',
+    difficulty: 'Intermediate',
+    rules: [
+      { name: 'VWAP Direction', description: 'Long only above VWAP, short only below VWAP' },
+      { name: 'VWAP Touch Entry', description: 'Enter on pullback to VWAP with rejection candle' },
+      { name: 'Standard Deviation Bands', description: 'Use 1st and 2nd deviation bands as targets' },
+      { name: 'Opening Range', description: 'Combine with first 15-30 min opening range' },
+      { name: 'Volume Confirmation', description: 'Higher volume on VWAP bounces' },
+      { name: 'Avoid Flat VWAP', description: 'No trades when VWAP is flat (ranging market)' }
+    ]
+  },
+  {
+    id: 'gap-and-go',
+    name: 'Gap and Go',
+    description: 'Trade stocks gapping up/down at market open with momentum continuation.',
+    icon: '🎯',
+    color: 'from-orange-500 to-red-600',
+    difficulty: 'Intermediate',
+    rules: [
+      { name: 'Pre-Market Gap', description: 'Stock gaps 4%+ in pre-market with volume' },
+      { name: 'Catalyst Required', description: 'Must have news catalyst (earnings, PR, upgrade)' },
+      { name: 'Float Check', description: 'Low float stocks (<20M) for bigger moves' },
+      { name: 'First Pullback Entry', description: 'Enter on first 5-min pullback after open' },
+      { name: 'Pre-Market High Break', description: 'Buy break of pre-market high' },
+      { name: 'Quick Profit Target', description: 'Target 5-10% move, trail stop tight' }
+    ]
+  },
+  {
+    id: 'mean-reversion',
+    name: 'Mean Reversion',
+    description: 'Trade extreme moves back to average using oversold/overbought conditions.',
+    icon: '🔄',
+    color: 'from-teal-500 to-cyan-600',
+    difficulty: 'Intermediate',
+    rules: [
+      { name: 'RSI Extreme', description: 'RSI below 30 (oversold) or above 70 (overbought)' },
+      { name: 'Bollinger Band Touch', description: 'Price touches or exceeds outer Bollinger Band' },
+      { name: 'Distance from MA', description: 'Price extended 2+ ATR from 20 EMA' },
+      { name: 'Reversal Candle', description: 'Wait for reversal candlestick pattern' },
+      { name: 'Target the Mean', description: 'Target 20 EMA or middle Bollinger Band' },
+      { name: 'Avoid Strong Trends', description: 'Skip setups in strong trending markets' }
+    ]
+  },
+  {
+    id: 'fibonacci',
+    name: 'Fibonacci Trading',
+    description: 'Use Fibonacci retracement and extension levels for precise entries and targets.',
+    icon: '🔢',
+    color: 'from-pink-500 to-rose-600',
+    difficulty: 'Intermediate',
+    rules: [
+      { name: 'Swing High/Low', description: 'Draw Fib from clear swing high to swing low' },
+      { name: '61.8% Golden Zone', description: 'Primary entry zone at 61.8%-78.6% retracement' },
+      { name: '50% Level', description: 'Secondary entry at 50% retracement level' },
+      { name: 'Confluence Required', description: 'Fib level must align with S/R or trendline' },
+      { name: 'Extension Targets', description: 'Target 127.2% and 161.8% extensions' },
+      { name: 'Trend Direction', description: 'Only trade retracements in trend direction' }
+    ]
+  },
+  {
+    id: 'momentum',
+    name: 'Momentum Trading',
+    description: 'Ride strong momentum moves with volume and relative strength confirmation.',
+    icon: '💨',
+    color: 'from-lime-500 to-green-600',
+    difficulty: 'Beginner',
+    rules: [
+      { name: 'Relative Strength', description: 'Stock outperforming SPY/QQQ on the day' },
+      { name: 'Volume Surge', description: '2x+ average volume with price movement' },
+      { name: 'New High/Low', description: 'Making new intraday or 52-week highs/lows' },
+      { name: 'MACD Confirmation', description: 'MACD histogram increasing in direction' },
+      { name: 'No Resistance Nearby', description: 'Clear path to next major level' },
+      { name: 'Trail with 9 EMA', description: 'Use 9 EMA as trailing stop on 5-min chart' }
+    ]
+  },
+  {
+    id: 'reversal',
+    name: 'Reversal Trading',
+    description: 'Catch trend reversals at key exhaustion points with confirmation patterns.',
+    icon: '↩️',
+    color: 'from-red-500 to-pink-600',
+    difficulty: 'Advanced',
+    rules: [
+      { name: 'Extended Move', description: 'Price extended after 5+ consecutive candles' },
+      { name: 'Divergence', description: 'RSI or MACD divergence from price' },
+      { name: 'Key Level', description: 'At major support/resistance or round number' },
+      { name: 'Reversal Pattern', description: 'Double top/bottom, head & shoulders forming' },
+      { name: 'Volume Climax', description: 'Spike in volume at the extreme' },
+      { name: 'Wait for Break', description: 'Confirm with structure break before entry' }
+    ]
+  },
+  {
+    id: 'range-trading',
+    name: 'Range Trading',
+    description: 'Trade bounces between support and resistance in consolidating markets.',
+    icon: '📦',
+    color: 'from-slate-500 to-gray-600',
+    difficulty: 'Beginner',
+    rules: [
+      { name: 'Defined Range', description: 'Clear horizontal support and resistance (3+ touches)' },
+      { name: 'Range Width', description: 'Minimum 2% range width for risk/reward' },
+      { name: 'Buy Support', description: 'Long at range support with stop below' },
+      { name: 'Sell Resistance', description: 'Short at range resistance with stop above' },
+      { name: 'RSI Confirmation', description: 'RSI oversold at support, overbought at resistance' },
+      { name: 'Exit Before Breakout', description: 'Close positions if volume increases significantly' }
+    ]
+  },
+  {
+    id: 'news-catalyst',
+    name: 'News Catalyst Trading',
+    description: 'Trade significant news events and earnings with proper risk management.',
+    icon: '📰',
+    color: 'from-blue-500 to-cyan-600',
+    difficulty: 'Advanced',
+    rules: [
+      { name: 'Major Catalyst', description: 'Earnings, FDA, mergers, or significant PR' },
+      { name: 'Pre-Event Setup', description: 'Enter before event with defined risk (or wait)' },
+      { name: 'Expected Move', description: 'Check options implied move for position sizing' },
+      { name: 'Liquidity Check', description: 'Ensure enough volume for clean exit' },
+      { name: 'First Reaction Fade', description: 'Often fade the initial knee-jerk reaction' },
+      { name: 'Reduced Size', description: 'Trade 50% normal size due to volatility' }
+    ]
+  },
+  {
+    id: 'options-flow',
+    name: 'Options Flow Trading',
+    description: 'Follow unusual options activity and smart money positioning.',
+    icon: '🎰',
+    color: 'from-emerald-500 to-green-600',
+    difficulty: 'Advanced',
+    rules: [
+      { name: 'Unusual Volume', description: 'Options volume 3x+ open interest' },
+      { name: 'Sweep Orders', description: 'Large sweep orders hitting multiple exchanges' },
+      { name: 'Premium Paid', description: 'Contracts bought at ask price (aggressive)' },
+      { name: 'Near Expiration', description: 'Weekly or monthly options (not LEAPs)' },
+      { name: 'OTM Calls/Puts', description: 'Focus on slightly OTM strikes' },
+      { name: 'Follow with Stock', description: 'Trade the stock, not the options (less decay risk)' }
+    ]
+  },
+  {
+    id: 'dark-pool',
+    name: 'Dark Pool & Block Trades',
+    description: 'Track institutional dark pool prints and block trades for direction.',
+    icon: '🏛️',
+    color: 'from-gray-600 to-slate-700',
+    difficulty: 'Advanced',
+    rules: [
+      { name: 'Large Block Prints', description: 'Single prints >$1M in dark pools' },
+      { name: 'Above/Below Price', description: 'Prints above current price = bullish' },
+      { name: 'Accumulation Pattern', description: 'Multiple large prints in same direction' },
+      { name: 'Time Analysis', description: 'End of day prints often signal next day direction' },
+      { name: 'Combine with TA', description: 'Use dark pool data to confirm technical setup' },
+      { name: 'Delayed Entry', description: 'Institutions scale in - follow the pattern' }
+    ]
+  },
+  {
+    id: 'opening-range',
+    name: 'Opening Range Breakout',
+    description: 'Trade the breakout of the first 15-30 minute trading range.',
+    icon: '🔔',
+    color: 'from-amber-500 to-yellow-600',
+    difficulty: 'Beginner',
+    rules: [
+      { name: 'Define Range', description: 'Mark high/low of first 15 or 30 minutes' },
+      { name: 'Wait for Break', description: 'Enter on break of range high or low' },
+      { name: 'Volume Confirmation', description: 'Breakout bar should have high volume' },
+      { name: 'Gap Context', description: 'Gap ups favor long breakouts, gap downs favor shorts' },
+      { name: 'Stop Inside Range', description: 'Place stop at opposite side of range' },
+      { name: 'Target Range Width', description: 'First target = range width extension' }
+    ]
+  },
+  {
+    id: 'ema-crossover',
+    name: 'EMA Crossover Strategy',
+    description: 'Trade moving average crossovers for trend changes and momentum.',
+    icon: '✖️',
+    color: 'from-fuchsia-500 to-pink-600',
+    difficulty: 'Beginner',
+    rules: [
+      { name: '9/21 EMA Cross', description: 'Enter when 9 EMA crosses 21 EMA' },
+      { name: 'Price Above/Below', description: 'Price must be on same side as crossover direction' },
+      { name: 'Slope Confirmation', description: 'Both EMAs should be sloping in trade direction' },
+      { name: 'Avoid Chop', description: 'Skip signals when EMAs are flat or intertwined' },
+      { name: 'Higher TF Trend', description: 'Trade crossovers in direction of daily trend' },
+      { name: 'Trail with 21 EMA', description: 'Exit when price closes beyond 21 EMA' }
+    ]
+  },
+  {
+    id: 'volume-profile',
+    name: 'Volume Profile Trading',
+    description: 'Use volume at price levels to identify high-probability trade zones.',
+    icon: '📊',
+    color: 'from-sky-500 to-blue-600',
+    difficulty: 'Advanced',
+    rules: [
+      { name: 'Point of Control', description: 'Trade reactions at POC (highest volume price)' },
+      { name: 'Value Area High/Low', description: 'VAH and VAL act as support/resistance' },
+      { name: 'Low Volume Nodes', description: 'Price moves fast through LVN (target zones)' },
+      { name: 'High Volume Nodes', description: 'Price consolidates at HVN (entry zones)' },
+      { name: 'Naked POC', description: 'Untested POC from previous sessions as magnet' },
+      { name: 'Session Context', description: 'Use developing POC during live trading' }
+    ]
+  },
+  {
+    id: 'wyckoff',
+    name: 'Wyckoff Method',
+    description: 'Understand market phases and institutional accumulation/distribution.',
+    icon: '📖',
+    color: 'from-stone-500 to-neutral-600',
+    difficulty: 'Advanced',
+    rules: [
+      { name: 'Phase Identification', description: 'Identify accumulation or distribution phase' },
+      { name: 'Spring/UTAD', description: 'Enter on spring (accumulation) or UTAD (distribution)' },
+      { name: 'Sign of Strength', description: 'Confirm with SOS (strong move out of range)' },
+      { name: 'Volume Analysis', description: 'High volume on markup, low volume on pullbacks' },
+      { name: 'Composite Man', description: 'Think like institutional traders' },
+      { name: 'Cause and Effect', description: 'Larger base = larger eventual move' }
+    ]
+  },
+  {
+    id: 'parabolic-sar',
+    name: 'Parabolic SAR Trading',
+    description: 'Use SAR dots for trend direction and trailing stop placement.',
+    icon: '⏺️',
+    color: 'from-rose-500 to-red-600',
+    difficulty: 'Beginner',
+    rules: [
+      { name: 'Dot Position', description: 'Long when dots below price, short when above' },
+      { name: 'Flip Entry', description: 'Enter when dots flip from one side to other' },
+      { name: 'Trend Filter', description: 'Only trade flips in direction of 50 EMA' },
+      { name: 'Trail with SAR', description: 'Use SAR dots as trailing stop loss' },
+      { name: 'Avoid Ranging', description: 'SAR whipsaws in ranges - use ADX filter' },
+      { name: 'Multiple Timeframes', description: 'Confirm signal on higher timeframe' }
+    ]
   }
 ];
 
