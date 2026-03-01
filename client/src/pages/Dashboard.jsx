@@ -653,12 +653,6 @@ export function Dashboard() {
         </div>
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      ` }} />
     </div>
   );
 }

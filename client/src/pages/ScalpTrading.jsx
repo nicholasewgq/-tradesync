@@ -465,7 +465,7 @@ export function ScalpTrading() {
                       step="0.05"
                       value={riskPerTrade}
                       onChange={(e) => setRiskPerTrade(e.target.value)}
-                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer"
+                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer range-slider-orange"
                       style={{
                         background: `linear-gradient(to right, #F97316 0%, #F97316 ${(parseFloat(riskPerTrade) / 1) * 100}%, rgba(255,255,255,0.1) ${(parseFloat(riskPerTrade) / 1) * 100}%, rgba(255,255,255,0.1) 100%)`
                       }}
@@ -605,17 +605,6 @@ export function ScalpTrading() {
         )}
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        input[type="range"]::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          width: 18px;
-          height: 18px;
-          background: linear-gradient(135deg, #F97316, #FBBF24);
-          border-radius: 50%;
-          cursor: pointer;
-          box-shadow: 0 0 15px rgba(249, 115, 22, 0.6);
-        }
-      ` }} />
     </div>
   );
 }

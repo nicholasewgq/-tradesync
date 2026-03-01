@@ -407,7 +407,7 @@ export function SwingTrading() {
                     step="0.25"
                     value={riskPerTrade}
                     onChange={(e) => setRiskPerTrade(e.target.value)}
-                    className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer accent-emerald-500"
+                    className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer accent-emerald-500 range-slider-green"
                     style={{
                       background: `linear-gradient(to right, #10B981 0%, #10B981 ${(parseFloat(riskPerTrade) / 3) * 100}%, rgba(255,255,255,0.1) ${(parseFloat(riskPerTrade) / 3) * 100}%, rgba(255,255,255,0.1) 100%)`
                     }}
@@ -567,21 +567,6 @@ export function SwingTrading() {
         )}
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        input[type="range"]::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          width: 20px;
-          height: 20px;
-          background: linear-gradient(135deg, #10B981, #059669);
-          border-radius: 50%;
-          cursor: pointer;
-          box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
-        }
-      ` }} />
     </div>
   );
 }
