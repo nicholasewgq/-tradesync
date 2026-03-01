@@ -11,7 +11,12 @@ import {
   ArrowDownRight,
   Sparkles,
   Zap,
-  BarChart3
+  BarChart3,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Gauge
 } from 'lucide-react';
 
 export function AnalysisResult({ analysis }) {
@@ -32,6 +37,30 @@ export function AnalysisResult({ analysis }) {
   };
 
   const BiasIcon = getBiasIcon();
+
+  // Setup grade styling
+  const getSetupGradeStyle = () => {
+    switch (analysis.setupGrade) {
+      case 'A': return { bg: 'from-emerald-500 to-green-600', text: 'text-white', label: 'A Grade - Strong Setup' };
+      case 'B': return { bg: 'from-blue-500 to-indigo-600', text: 'text-white', label: 'B Grade - Good Setup' };
+      case 'C': return { bg: 'from-amber-500 to-orange-600', text: 'text-white', label: 'C Grade - Weak Setup' };
+      default: return { bg: 'from-red-500 to-rose-600', text: 'text-white', label: 'D Grade - No Setup' };
+    }
+  };
+
+  const gradeStyle = getSetupGradeStyle();
+
+  // Recommendation styling
+  const getRecommendationStyle = () => {
+    switch (analysis.recommendation) {
+      case 'LONG': return { bg: 'bg-emerald-500', icon: TrendingUp, text: 'GO LONG' };
+      case 'SHORT': return { bg: 'bg-red-500', icon: TrendingDown, text: 'GO SHORT' };
+      default: return { bg: 'bg-amber-500', icon: Clock, text: 'WAIT - No Trade' };
+    }
+  };
+
+  const recStyle = getRecommendationStyle();
+  const RecIcon = recStyle.icon;
 
   const getStrengthWidth = () => {
     switch (analysis.trendStrength) {
@@ -136,6 +165,117 @@ export function AnalysisResult({ analysis }) {
           </div>
         </div>
       </div>
+
+      {/* Setup Grade & Recommendation - NEW */}
+      {analysis.setupGrade && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          {/* Setup Grade */}
+          <div className={`relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-r ${gradeStyle.bg} p-4 md:p-6 shadow-xl`}>
+            <div className="absolute inset-0 bg-black/10" />
+            <div className="relative flex items-center justify-between">
+              <div>
+                <p className="text-white/70 text-xs md:text-sm font-medium mb-1">Setup Quality</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <span className="text-2xl md:text-3xl font-bold text-white">{analysis.setupGrade}</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg md:text-xl font-bold text-white">{gradeStyle.label}</h3>
+                    <p className="text-white/70 text-sm">
+                      {analysis.setupGrade === 'A' || analysis.setupGrade === 'B' ? 'Tradeable' : 'Not Tradeable'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-white/70 text-xs mb-1">Confluence</p>
+                <p className="text-3xl md:text-4xl font-bold text-white">{analysis.confluenceScore || 0}</p>
+                <p className="text-white/70 text-xs">/15 points</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Recommendation */}
+          <div className={`relative overflow-hidden rounded-xl md:rounded-2xl ${recStyle.bg} p-4 md:p-6 shadow-xl`}>
+            <div className="absolute inset-0 bg-black/10" />
+            <div className="relative flex items-center justify-between">
+              <div>
+                <p className="text-white/70 text-xs md:text-sm font-medium mb-1">Recommendation</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <RecIcon className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-bold text-white">{recStyle.text}</h3>
+                    {analysis.recommendation === 'WAIT' && (
+                      <p className="text-white/70 text-sm">Wait for better setup</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              {analysis.priceStructure && (
+                <div className="text-right">
+                  <p className="text-white/70 text-xs mb-1">Structure</p>
+                  <p className={`text-lg font-bold ${
+                    analysis.priceStructure === 'Clean' ? 'text-white' :
+                    analysis.priceStructure === 'Choppy' ? 'text-white/70' : 'text-white/80'
+                  }`}>
+                    {analysis.priceStructure}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confluence Factors - NEW */}
+      {analysis.confluenceFactors && analysis.confluenceFactors.length > 0 && (
+        <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl md:rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-4 md:p-6 shadow-xl shadow-gray-200/20 dark:shadow-none">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/25">
+              <Gauge className="w-4 h-4 md:w-5 md:h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 dark:text-white text-base md:text-lg">Confluence Factors</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Signals contributing to this analysis</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {analysis.confluenceFactors.map((factor, index) => {
+              const isBullish = factor.toLowerCase().includes('bull');
+              const isBearish = factor.toLowerCase().includes('bear');
+
+              return (
+                <div
+                  key={index}
+                  className={`flex items-center gap-2 p-3 rounded-lg ${
+                    isBullish ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200/50 dark:border-emerald-800/50' :
+                    isBearish ? 'bg-red-50 dark:bg-red-900/20 border border-red-200/50 dark:border-red-800/50' :
+                    'bg-gray-50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50'
+                  }`}
+                >
+                  {isBullish ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                  ) : isBearish ? (
+                    <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                  )}
+                  <span className={`text-sm ${
+                    isBullish ? 'text-emerald-700 dark:text-emerald-400' :
+                    isBearish ? 'text-red-700 dark:text-red-400' :
+                    'text-gray-700 dark:text-gray-300'
+                  }`}>
+                    {factor}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Pattern Analysis & Risk Management Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">

@@ -267,6 +267,49 @@ export function detectPatterns(candles) {
   return patterns;
 }
 
+// Detect if price structure is clean (trending) or choppy
+function detectPriceStructure(candles, period = 20) {
+  if (candles.length < period) return 'Choppy';
+
+  const recentCandles = candles.slice(-period);
+  const closes = recentCandles.map(c => c.close);
+
+  // Calculate directional changes
+  let directionChanges = 0;
+  for (let i = 2; i < closes.length; i++) {
+    const prevDir = closes[i - 1] > closes[i - 2];
+    const currDir = closes[i] > closes[i - 1];
+    if (prevDir !== currDir) directionChanges++;
+  }
+
+  // Calculate average candle body to wick ratio (cleaner trends have larger bodies)
+  let totalBody = 0;
+  let totalRange = 0;
+  for (const candle of recentCandles) {
+    totalBody += Math.abs(candle.close - candle.open);
+    totalRange += candle.high - candle.low;
+  }
+  const bodyRatio = totalRange > 0 ? totalBody / totalRange : 0.5;
+
+  // Check if making higher highs/lows (uptrend) or lower highs/lows (downtrend)
+  const highs = recentCandles.map(c => c.high);
+  const lows = recentCandles.map(c => c.low);
+
+  let higherHighs = 0;
+  let lowerLows = 0;
+  for (let i = 5; i < highs.length; i += 5) {
+    if (highs[i] > highs[i - 5]) higherHighs++;
+    if (lows[i] < lows[i - 5]) lowerLows++;
+  }
+
+  // Choppy = many direction changes, small bodies, no clear HH/LL pattern
+  const choppinessScore = directionChanges / period;
+
+  if (choppinessScore > 0.6 || bodyRatio < 0.3) return 'Choppy';
+  if (choppinessScore < 0.3 && bodyRatio > 0.5) return 'Clean';
+  return 'Ranging';
+}
+
 export function generateAnalysis(candles) {
   const closes = candles.map(c => c.close);
   const volumes = candles.map(c => c.volume || 0);
@@ -280,86 +323,266 @@ export function generateAnalysis(candles) {
   const volumeTrend = calculateVolumeTrend(volumes);
   const levels = findSupportResistance(candles);
   const patterns = detectPatterns(candles);
+  const priceStructure = detectPriceStructure(candles);
 
   const currentPrice = closes[closes.length - 1];
   const latestRSI = rsi.length > 0 ? rsi[rsi.length - 1] : 50;
   const latestMACD = macd.histogram.length > 0 ? macd.histogram[macd.histogram.length - 1] : 0;
+  const prevMACD = macd.histogram.length > 1 ? macd.histogram[macd.histogram.length - 2] : 0;
   const latestEma20 = ema20.length > 0 ? ema20[ema20.length - 1] : currentPrice;
   const latestEma50 = ema50.length > 0 ? ema50[ema50.length - 1] : currentPrice;
   const latestEma200 = ema200.length > 0 ? ema200[ema200.length - 1] : currentPrice;
 
-  // Determine bias
-  let bullishSignals = 0;
-  let bearishSignals = 0;
+  // ============================================
+  // WEIGHTED CONFLUENCE SCORING SYSTEM
+  // ============================================
+  let bullishScore = 0;
+  let bearishScore = 0;
+  const confluenceFactors = [];
 
-  if (currentPrice > latestEma20) bullishSignals++; else bearishSignals++;
-  if (currentPrice > latestEma50) bullishSignals++; else bearishSignals++;
-  if (currentPrice > latestEma200) bullishSignals++; else bearishSignals++;
-  if (latestRSI > 50) bullishSignals++; else bearishSignals++;
-  if (latestMACD > 0) bullishSignals++; else bearishSignals++;
-  if (volumeTrend.trend === 'increasing') bullishSignals++;
+  // EMA200 - Highest weight (3 points)
+  if (ema200.length > 0) {
+    if (currentPrice > latestEma200) {
+      bullishScore += 3;
+      confluenceFactors.push('Price above EMA200 (+3 bull)');
+    } else {
+      bearishScore += 3;
+      confluenceFactors.push('Price below EMA200 (+3 bear)');
+    }
+  }
 
+  // EMA50 - Medium weight (2 points)
+  if (ema50.length > 0) {
+    if (currentPrice > latestEma50) {
+      bullishScore += 2;
+      confluenceFactors.push('Price above EMA50 (+2 bull)');
+    } else {
+      bearishScore += 2;
+      confluenceFactors.push('Price below EMA50 (+2 bear)');
+    }
+  }
+
+  // EMA20 - Lower weight (1 point)
+  if (ema20.length > 0) {
+    if (currentPrice > latestEma20) {
+      bullishScore += 1;
+      confluenceFactors.push('Price above EMA20 (+1 bull)');
+    } else {
+      bearishScore += 1;
+      confluenceFactors.push('Price below EMA20 (+1 bear)');
+    }
+  }
+
+  // RSI confirmation (2 points) - stricter thresholds
+  if (latestRSI > 55 && latestRSI < 75) {
+    bullishScore += 2;
+    confluenceFactors.push(`RSI ${latestRSI.toFixed(1)} bullish momentum (+2 bull)`);
+  } else if (latestRSI < 45 && latestRSI > 25) {
+    bearishScore += 2;
+    confluenceFactors.push(`RSI ${latestRSI.toFixed(1)} bearish momentum (+2 bear)`);
+  } else if (latestRSI >= 75) {
+    bearishScore += 1; // Overbought - potential reversal
+    confluenceFactors.push(`RSI ${latestRSI.toFixed(1)} overbought (+1 bear)`);
+  } else if (latestRSI <= 25) {
+    bullishScore += 1; // Oversold - potential reversal
+    confluenceFactors.push(`RSI ${latestRSI.toFixed(1)} oversold (+1 bull)`);
+  }
+
+  // MACD histogram direction (2 points)
+  const macdTrending = latestMACD > prevMACD;
+  if (latestMACD > 0 && macdTrending) {
+    bullishScore += 2;
+    confluenceFactors.push('MACD positive and rising (+2 bull)');
+  } else if (latestMACD < 0 && !macdTrending) {
+    bearishScore += 2;
+    confluenceFactors.push('MACD negative and falling (+2 bear)');
+  } else if (latestMACD > 0) {
+    bullishScore += 1;
+    confluenceFactors.push('MACD positive (+1 bull)');
+  } else if (latestMACD < 0) {
+    bearishScore += 1;
+    confluenceFactors.push('MACD negative (+1 bear)');
+  }
+
+  // Volume trend confirming (1 point)
+  if (volumeTrend.trend === 'increasing') {
+    // Volume confirms the dominant direction
+    if (bullishScore > bearishScore) {
+      bullishScore += 1;
+      confluenceFactors.push('Volume increasing with bullish bias (+1 bull)');
+    } else if (bearishScore > bullishScore) {
+      bearishScore += 1;
+      confluenceFactors.push('Volume increasing with bearish bias (+1 bear)');
+    }
+  }
+
+  // Chart pattern detection (2 points each)
   patterns.forEach(p => {
-    if (p.type === 'bullish') bullishSignals++;
-    else if (p.type === 'bearish') bearishSignals++;
+    if (p.type === 'bullish') {
+      bullishScore += 2;
+      confluenceFactors.push(`${p.name} pattern (+2 bull)`);
+    } else if (p.type === 'bearish') {
+      bearishScore += 2;
+      confluenceFactors.push(`${p.name} pattern (+2 bear)`);
+    }
   });
 
+  // Clean price structure (2 points)
+  if (priceStructure === 'Clean') {
+    if (bullishScore > bearishScore) {
+      bullishScore += 2;
+      confluenceFactors.push('Clean uptrend structure (+2 bull)');
+    } else if (bearishScore > bullishScore) {
+      bearishScore += 2;
+      confluenceFactors.push('Clean downtrend structure (+2 bear)');
+    }
+  } else if (priceStructure === 'Choppy') {
+    confluenceFactors.push('Choppy price action (no points, caution)');
+  }
+
+  // ============================================
+  // DETERMINE BIAS WITH HIGHER THRESHOLD
+  // ============================================
+  const confluenceScore = Math.max(bullishScore, bearishScore);
+  const scoreDifference = Math.abs(bullishScore - bearishScore);
+
+  // Require +4 signal difference (up from +2) for directional bias
   let bias = 'Neutral';
-  if (bullishSignals > bearishSignals + 2) bias = 'Bullish';
-  else if (bearishSignals > bullishSignals + 2) bias = 'Bearish';
+  let recommendation = 'WAIT';
 
-  // Trend strength
-  const totalSignals = bullishSignals + bearishSignals;
-  const dominantSignals = Math.max(bullishSignals, bearishSignals);
-  const strengthRatio = totalSignals > 0 ? dominantSignals / totalSignals : 0.5;
+  // Check for conflicting signals (both scores high = unclear)
+  const hasConflictingSignals = bullishScore >= 6 && bearishScore >= 6;
 
+  if (!hasConflictingSignals && scoreDifference >= 4) {
+    if (bullishScore > bearishScore) {
+      bias = 'Bullish';
+      recommendation = 'LONG';
+    } else {
+      bias = 'Bearish';
+      recommendation = 'SHORT';
+    }
+  }
+
+  // ============================================
+  // SETUP GRADE CALCULATION
+  // ============================================
+  // A Grade: 15+ points in dominant direction
+  // B Grade: 12-14 points
+  // C Grade: 8-11 points
+  // D Grade: <8 points
+  let setupGrade;
+  if (confluenceScore >= 15 && scoreDifference >= 4) {
+    setupGrade = 'A';
+  } else if (confluenceScore >= 12 && scoreDifference >= 4) {
+    setupGrade = 'B';
+  } else if (confluenceScore >= 8) {
+    setupGrade = 'C';
+  } else {
+    setupGrade = 'D';
+  }
+
+  // Force WAIT for C and D grade setups
+  const isTradeableSetup = setupGrade === 'A' || setupGrade === 'B';
+  if (!isTradeableSetup) {
+    bias = 'Neutral';
+    recommendation = 'WAIT';
+  }
+
+  // Downgrade if price structure is choppy
+  if (priceStructure === 'Choppy' && setupGrade !== 'D') {
+    setupGrade = setupGrade === 'A' ? 'B' : setupGrade === 'B' ? 'C' : setupGrade;
+    if (setupGrade === 'C') {
+      bias = 'Neutral';
+      recommendation = 'WAIT';
+    }
+  }
+
+  // ============================================
+  // TREND STRENGTH
+  // ============================================
   let trendStrength = 'Weak';
-  if (strengthRatio > 0.75) trendStrength = 'Strong';
-  else if (strengthRatio > 0.6) trendStrength = 'Moderate';
+  if (confluenceScore >= 12 && priceStructure === 'Clean') {
+    trendStrength = 'Strong';
+  } else if (confluenceScore >= 8) {
+    trendStrength = 'Moderate';
+  }
 
-  // Entry, SL, TP calculations
+  // ============================================
+  // ENTRY, SL, TP CALCULATIONS
+  // ============================================
   const atr = calculateATR(candles, 14);
   const latestATR = atr.length > 0 ? atr[atr.length - 1] : currentPrice * 0.02;
 
-  let entry, stopLoss, takeProfit;
+  let entry = 0, stopLoss = 0, takeProfit = 0;
+  let riskRewardRatio = '0.00';
 
-  if (bias === 'Bullish') {
-    entry = currentPrice;
-    stopLoss = levels.support.length > 0
-      ? Math.min(levels.support[0], currentPrice - latestATR * 1.5)
-      : currentPrice - latestATR * 1.5;
-    takeProfit = levels.resistance.length > 0
-      ? levels.resistance[0]
-      : currentPrice + latestATR * 3;
-  } else if (bias === 'Bearish') {
-    entry = currentPrice;
-    stopLoss = levels.resistance.length > 0
-      ? Math.max(levels.resistance[0], currentPrice + latestATR * 1.5)
-      : currentPrice + latestATR * 1.5;
-    takeProfit = levels.support.length > 0
-      ? levels.support[0]
-      : currentPrice - latestATR * 3;
-  } else {
-    entry = currentPrice;
-    stopLoss = currentPrice - latestATR * 1.5;
-    takeProfit = currentPrice + latestATR * 2;
+  // Only calculate entry/exit if tradeable setup
+  if (isTradeableSetup && recommendation !== 'WAIT') {
+    if (bias === 'Bullish') {
+      entry = currentPrice;
+      stopLoss = levels.support.length > 0
+        ? Math.min(levels.support[0], currentPrice - latestATR * 1.5)
+        : currentPrice - latestATR * 1.5;
+      // Target at least 2:1 R:R
+      const minTarget = currentPrice + (currentPrice - stopLoss) * 2;
+      takeProfit = levels.resistance.length > 0
+        ? Math.max(levels.resistance[0], minTarget)
+        : minTarget;
+    } else if (bias === 'Bearish') {
+      entry = currentPrice;
+      stopLoss = levels.resistance.length > 0
+        ? Math.max(levels.resistance[0], currentPrice + latestATR * 1.5)
+        : currentPrice + latestATR * 1.5;
+      // Target at least 2:1 R:R
+      const minTarget = currentPrice - (stopLoss - currentPrice) * 2;
+      takeProfit = levels.support.length > 0
+        ? Math.min(levels.support[0], minTarget)
+        : minTarget;
+    }
+
+    const risk = Math.abs(entry - stopLoss);
+    const reward = Math.abs(takeProfit - entry);
+    riskRewardRatio = risk > 0 ? (reward / risk).toFixed(2) : '0.00';
+
+    // Enforce minimum 2:1 R:R - if not met, downgrade to WAIT
+    if (parseFloat(riskRewardRatio) < 2.0) {
+      recommendation = 'WAIT';
+      bias = 'Neutral';
+      entry = 0;
+      stopLoss = 0;
+      takeProfit = 0;
+      riskRewardRatio = '0.00';
+      confluenceFactors.push('R:R below 2.0 - trade rejected');
+    }
   }
 
-  const risk = Math.abs(entry - stopLoss);
-  const reward = Math.abs(takeProfit - entry);
-  const riskRewardRatio = risk > 0 ? (reward / risk).toFixed(2) : '0.00';
-
-  // Confidence score
-  let confidence = 50;
-  confidence += (dominantSignals - Math.min(bullishSignals, bearishSignals)) * 5;
-  confidence += patterns.length * 5;
-  if (parseFloat(riskRewardRatio) >= 2) confidence += 10;
-  if (volumeTrend.trend === 'increasing' && bias !== 'Neutral') confidence += 5;
-  confidence = Math.min(95, Math.max(20, confidence));
+  // ============================================
+  // CONFIDENCE SCORE (Based on confluence)
+  // ============================================
+  // A grade: 80-100%
+  // B grade: 65-79%
+  // C grade: 40-64%
+  // D grade: 0-39%
+  let confidence;
+  if (setupGrade === 'A') {
+    confidence = Math.min(100, 80 + Math.floor((confluenceScore - 15) * 4));
+  } else if (setupGrade === 'B') {
+    confidence = 65 + Math.floor((confluenceScore - 12) * 5);
+  } else if (setupGrade === 'C') {
+    confidence = 40 + Math.floor((confluenceScore - 8) * 6);
+  } else {
+    confidence = Math.max(10, Math.floor(confluenceScore * 5));
+  }
+  confidence = Math.min(100, Math.max(10, confidence));
 
   return {
     bias,
+    setupGrade,
+    confluenceScore,
+    confluenceFactors,
+    recommendation,
     trendStrength,
+    priceStructure,
     support: levels.support.map(l => parseFloat(l.toFixed(4))),
     resistance: levels.resistance.map(l => parseFloat(l.toFixed(4))),
     patterns: patterns.map(p => p.name),

@@ -184,6 +184,7 @@ Be specific, actionable, and reference their actual data. Don't be generic.`
 
 // ============================================
 // SMART SIGNALS - Entry/Exit recommendations
+// HIGH-PROBABILITY SETUP FILTER
 // ============================================
 router.post('/signals', authenticateToken, async (req, res) => {
   try {
@@ -196,39 +197,69 @@ router.post('/signals', authenticateToken, async (req, res) => {
 
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 1500,
+      max_tokens: 2000,
       messages: [
         {
           role: 'user',
-          content: `You are a professional technical analyst. Generate smart trading signals for:
+          content: `You are an expert technical analyst who ONLY recommends HIGH-PROBABILITY setups.
+
+CRITICAL: Your default recommendation should be "WAIT" unless there is a CLEAR, HIGH-QUALITY setup.
 
 Symbol: ${symbol}
 Current Price: $${currentPrice}
 Timeframe: ${timeframe}
 ${marketContext ? `Market Context: ${marketContext}` : ''}
 
+## CONFLUENCE SCORING (you must evaluate):
+- Clear trend direction: 3 points
+- Price at key support/resistance: 2 points
+- Momentum confirmation (RSI 30-45 for longs, 55-70 for shorts): 2 points
+- Volume pattern supporting move: 1 point
+- Chart pattern present: 2 points
+- Clean price structure (not choppy): 2 points
+- Risk:Reward >= 2:1 achievable: 3 points
+
+TOTAL POSSIBLE: 15 points
+
+## SETUP GRADES:
+- A Grade (12+ points): Strong setup - Give LONG or SHORT recommendation
+- B Grade (10-11 points): Good setup - Give LONG or SHORT recommendation
+- C Grade (7-9 points): Weak setup - Recommend WAIT
+- D Grade (<7 points): No setup - Recommend WAIT
+
+## REQUIREMENTS FOR TRADE SIGNAL:
+1. Setup grade must be A or B
+2. Risk:Reward must be >= 2.0
+3. No conflicting major signals
+4. Clear invalidation level for stop loss
+
+If ANY requirement is not met, recommend "WAIT".
+
 Provide analysis in this JSON format:
 {
   "bias": "Bullish" | "Bearish" | "Neutral",
-  "confidence": 0-100,
+  "setupGrade": "A" | "B" | "C" | "D",
+  "confluenceScore": number (0-15),
+  "confluenceFactors": ["factor1 (+X points)", "factor2 (+X points)"],
+  "confidence": 0-100 (A=80-100, B=65-79, C=40-64, D=<40),
   "signals": {
     "long": {
-      "entry": price,
+      "entry": price (0 if not recommending long),
       "stopLoss": price,
       "takeProfit1": price,
       "takeProfit2": price,
       "takeProfit3": price,
       "riskReward": "X.XX",
-      "reasoning": "Why this long setup"
+      "reasoning": "Why this long setup works or why it doesn't"
     },
     "short": {
-      "entry": price,
+      "entry": price (0 if not recommending short),
       "stopLoss": price,
       "takeProfit1": price,
       "takeProfit2": price,
       "takeProfit3": price,
       "riskReward": "X.XX",
-      "reasoning": "Why this short setup"
+      "reasoning": "Why this short setup works or why it doesn't"
     }
   },
   "keyLevels": {
@@ -238,10 +269,16 @@ Provide analysis in this JSON format:
     "strongResistance": [prices]
   },
   "recommendation": "LONG" | "SHORT" | "WAIT",
-  "summary": "2-3 sentence summary of the setup"
+  "waitReason": "If WAIT, explain what needs to happen for a valid setup",
+  "summary": "2-3 sentence summary explaining your decision"
 }
 
-Use realistic price levels based on the current price. Calculate proper risk/reward ratios.`
+IMPORTANT:
+- Be conservative - most market conditions should return "WAIT"
+- Only A and B grade setups should get LONG/SHORT recommendations
+- R:R must be >= 2.0 for any trade signal
+- If conflicting signals exist, recommend WAIT
+- Protecting capital is priority #1`
         }
       ]
     });
@@ -254,6 +291,43 @@ Use realistic price levels based on the current price. Calculate proper risk/rew
     }
 
     const signals = JSON.parse(jsonMatch[0]);
+
+    // Enforce setup grade requirements on the server side
+    const setupGrade = signals.setupGrade || 'D';
+    const isTradeableSetup = setupGrade === 'A' || setupGrade === 'B';
+
+    // Override recommendation if setup grade doesn't qualify
+    if (!isTradeableSetup && signals.recommendation !== 'WAIT') {
+      signals.recommendation = 'WAIT';
+      signals.bias = 'Neutral';
+      signals.waitReason = signals.waitReason || `Setup grade ${setupGrade} does not meet minimum requirements (A or B required)`;
+    }
+
+    // Enforce minimum R:R
+    if (signals.recommendation === 'LONG') {
+      const rr = parseFloat(signals.signals?.long?.riskReward) || 0;
+      if (rr < 2.0) {
+        signals.recommendation = 'WAIT';
+        signals.waitReason = `Long R:R of ${rr} is below minimum 2.0 requirement`;
+      }
+    } else if (signals.recommendation === 'SHORT') {
+      const rr = parseFloat(signals.signals?.short?.riskReward) || 0;
+      if (rr < 2.0) {
+        signals.recommendation = 'WAIT';
+        signals.waitReason = `Short R:R of ${rr} is below minimum 2.0 requirement`;
+      }
+    }
+
+    // Adjust confidence based on setup grade if not already aligned
+    if (setupGrade === 'A' && signals.confidence < 80) {
+      signals.confidence = 80;
+    } else if (setupGrade === 'B' && (signals.confidence < 65 || signals.confidence >= 80)) {
+      signals.confidence = Math.max(65, Math.min(79, signals.confidence));
+    } else if (setupGrade === 'C' && signals.confidence >= 65) {
+      signals.confidence = 50;
+    } else if (setupGrade === 'D' && signals.confidence >= 40) {
+      signals.confidence = 30;
+    }
 
     res.json({
       success: true,

@@ -48,33 +48,73 @@ function getAnthropicClient() {
   return new Anthropic({ apiKey });
 }
 
-// Vision analysis prompt
-const VISION_ANALYSIS_PROMPT = `You are an expert technical analyst. Analyze this trading chart image and provide a detailed technical analysis.
+// Vision analysis prompt - HIGH-PROBABILITY SETUP FILTER
+const VISION_ANALYSIS_PROMPT = `You are an expert technical analyst specializing in HIGH-PROBABILITY trade setups only.
 
-Examine the chart for:
-1. Overall trend direction and structure
-2. Key support and resistance levels (identify specific price levels if visible)
-3. Chart patterns (double top/bottom, head & shoulders, triangles, flags, wedges, channels)
-4. Candlestick patterns
-5. Momentum and potential reversal signals
-6. Volume patterns if visible
+CRITICAL: Your default response should be "Neutral" with recommendation "WAIT" unless you identify a CLEAR, HIGH-QUALITY setup with multiple confirming factors.
+
+## CONFLUENCE SCORING SYSTEM
+Score each factor present in the chart (you MUST count these):
+- Price clearly above/below EMA200 (or major MA): 3 points
+- Price clearly above/below EMA50 (or medium MA): 2 points
+- Price clearly above/below EMA20 (or short MA): 1 point
+- RSI confirmation (visibly overbought >70 for bear, oversold <30 for bull, OR trending with price): 2 points
+- MACD/momentum indicator confirming direction: 2 points
+- Volume confirming move (higher on direction candles): 1 point
+- Clear chart pattern (double top/bottom, H&S, triangle breakout, etc.): 2 points
+- Clean price structure (not choppy/ranging sideways): 2 points
+
+TOTAL POSSIBLE: 15 points
+
+## SETUP QUALITY GRADES
+- A Grade (12+ points): Strong confluence, clear structure - TRADE SIGNAL
+- B Grade (10-11 points): Good setup, proceed with caution - TRADE SIGNAL
+- C Grade (7-9 points): Weak setup - OUTPUT "Neutral" with "WAIT"
+- D Grade (<7 points): No clear setup - OUTPUT "Neutral" with "WAIT"
+
+## AVOID CONDITIONS (Auto-downgrade to WAIT):
+- Choppy, sideways, ranging price action
+- Price stuck between major MAs with no clear direction
+- Conflicting signals (bullish price, bearish indicators or vice versa)
+- Near major news events visible on chart
+- Very low volume/thin candles
+- Middle of a range (not at support/resistance)
+
+## REQUIREMENTS FOR BULLISH/BEARISH BIAS:
+You MUST have AT LEAST 3 of these confirming:
+1. Price above/below key moving averages
+2. Momentum indicator (RSI/MACD) confirming
+3. Clear pattern or structure
+4. Volume confirmation
+5. Clean trend (not choppy)
+
+If you cannot identify 3+ confirming factors, output "Neutral" bias.
 
 Provide your analysis in this exact JSON format:
 {
   "bias": "Bullish" | "Bearish" | "Neutral",
+  "setupGrade": "A" | "B" | "C" | "D",
+  "confluenceScore": number (0-15 based on scoring above),
+  "confluenceFactors": ["list each factor you counted and its points"],
   "trendStrength": "Weak" | "Moderate" | "Strong",
+  "priceStructure": "Clean" | "Choppy" | "Ranging",
   "support": [array of price levels as numbers, or empty if not visible],
   "resistance": [array of price levels as numbers, or empty if not visible],
   "patterns": [array of pattern names detected],
-  "entry": suggested entry price as number (estimate based on current price area),
-  "stopLoss": suggested stop loss as number,
-  "takeProfit": suggested take profit as number,
-  "riskRewardRatio": "X.XX" as string,
-  "confidence": number between 0-100,
-  "reasoning": "Brief explanation of your analysis"
+  "entry": suggested entry price as number (0 if WAIT),
+  "stopLoss": suggested stop loss as number (0 if WAIT),
+  "takeProfit": suggested take profit as number (0 if WAIT),
+  "riskRewardRatio": "X.XX" as string ("0.00" if WAIT),
+  "confidence": number between 0-100 (based on: A=80-100, B=65-79, C=40-64, D=0-39),
+  "recommendation": "LONG" | "SHORT" | "WAIT",
+  "reasoning": "Brief explanation including why this IS or IS NOT a tradeable setup"
 }
 
-Be specific and realistic. If you cannot determine exact price levels, estimate based on the visible chart structure. Focus on actionable insights.`;
+IMPORTANT:
+- Only output "Bullish"/"Bearish" bias AND "LONG"/"SHORT" recommendation for A or B grade setups
+- R:R must be >= 2.0 for a trade signal, otherwise output WAIT
+- When in doubt, output WAIT - protecting capital is priority #1
+- Be brutally honest about setup quality - most charts should return WAIT`;
 
 // Analyze chart image using Claude Vision
 async function analyzeChartImage(imagePath, timeframe) {
@@ -151,17 +191,42 @@ async function analyzeChartImage(imagePath, timeframe) {
   }
 
   // Ensure all required fields exist
+  // Validate setup grade and enforce WAIT for low-quality setups
+  const setupGrade = analysis.setupGrade || 'D';
+  const isTradeableSetup = setupGrade === 'A' || setupGrade === 'B';
+
+  // Override bias to Neutral if setup grade is C or D
+  let finalBias = analysis.bias || 'Neutral';
+  let finalRecommendation = analysis.recommendation || 'WAIT';
+
+  if (!isTradeableSetup) {
+    finalBias = 'Neutral';
+    finalRecommendation = 'WAIT';
+  }
+
+  // Ensure R:R >= 2.0 for trade signals
+  const rr = parseFloat(analysis.riskRewardRatio) || 0;
+  if (rr < 2.0 && finalRecommendation !== 'WAIT') {
+    finalRecommendation = 'WAIT';
+    finalBias = 'Neutral';
+  }
+
   return {
-    bias: analysis.bias || 'Neutral',
+    bias: finalBias,
+    setupGrade,
+    confluenceScore: analysis.confluenceScore || 0,
+    confluenceFactors: Array.isArray(analysis.confluenceFactors) ? analysis.confluenceFactors : [],
     trendStrength: analysis.trendStrength || 'Moderate',
+    priceStructure: analysis.priceStructure || 'Choppy',
     support: Array.isArray(analysis.support) ? analysis.support : [],
     resistance: Array.isArray(analysis.resistance) ? analysis.resistance : [],
     patterns: Array.isArray(analysis.patterns) ? analysis.patterns : [],
-    entry: analysis.entry || 0,
-    stopLoss: analysis.stopLoss || 0,
-    takeProfit: analysis.takeProfit || 0,
-    riskRewardRatio: analysis.riskRewardRatio || '0.00',
-    confidence: analysis.confidence || 50,
+    entry: isTradeableSetup ? (analysis.entry || 0) : 0,
+    stopLoss: isTradeableSetup ? (analysis.stopLoss || 0) : 0,
+    takeProfit: isTradeableSetup ? (analysis.takeProfit || 0) : 0,
+    riskRewardRatio: isTradeableSetup ? (analysis.riskRewardRatio || '0.00') : '0.00',
+    confidence: analysis.confidence || (setupGrade === 'A' ? 85 : setupGrade === 'B' ? 70 : setupGrade === 'C' ? 50 : 25),
+    recommendation: finalRecommendation,
     reasoning: analysis.reasoning || '',
     source: 'vision'
   };
