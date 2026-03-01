@@ -120,8 +120,26 @@ IMPORTANT:
 async function analyzeChartImage(imagePath, timeframe) {
   const anthropic = getAnthropicClient();
 
+  // Validate file exists and has content
+  if (!fs.existsSync(imagePath)) {
+    throw new Error(`Image file not found: ${imagePath}`);
+  }
+
+  const stats = fs.statSync(imagePath);
+  if (stats.size === 0) {
+    throw new Error('Image file is empty (0 bytes)');
+  }
+
+  console.log(`Reading image: ${imagePath}, size: ${stats.size} bytes`);
+
   const imageBuffer = fs.readFileSync(imagePath);
   const base64Image = imageBuffer.toString('base64');
+
+  if (!base64Image || base64Image.length === 0) {
+    throw new Error('Failed to encode image to base64');
+  }
+
+  console.log(`Base64 encoded, length: ${base64Image.length} chars`);
 
   // Properly detect mime type
   const ext = path.extname(imagePath).toLowerCase();
